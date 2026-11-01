@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PDM Cup 2026 – Bracket Ganda Putra</title>
+
+<!-- Font: Bebas Neue (judul), Barlow Condensed (nama tim & skor), Montserrat (UI) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@500;600;700&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Tailwind CSS via CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  window.tailwind = window.tailwind || {};
+  tailwind.config = {
+    theme: { extend: {
+      colors: { ink:'#070b14', panel:'#0e1525', neon:'#3dff7a', gold:'#ffc83d' },
+      fontFamily: { display:['"Bebas Neue"','sans-serif'], cond:['"Barlow Condensed"','sans-serif'], sans:['Montserrat','sans-serif'] }
+    } }
+  };
+</script>
+
+<style>
+  /* ================= TOKEN & BASE ================= */
+  :root{
+    --ink:#070b14; --neon:#3dff7a; --gold:#ffc83d;
+    --cw:272px;        /* lebar kartu pertandingan */
+    --rowh:36px;       /* tinggi baris tim */
+    --colgap:40px;     /* jarak antar kolom babak (ruang konektor) */
+    --zoom-dur:.8s;    /* durasi animasi zoom kamera */
+  }
+  html,body{margin:0;background:var(--ink);color:#e6edf7;font-family:Montserrat,sans-serif;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 12% -10%, rgba(61,255,122,.10), transparent 60%),
+      radial-gradient(900px 500px at 92% 0%, rgba(255,200,61,.09), transparent 60%),
+      #070b14;
+    background-attachment:fixed;
+  }
+  body.tv{overflow:hidden;height:100vh}
+  body.cursor-hide, body.cursor-hide *{cursor:none!important}
+  .is-hidden{display:none!important}
+  ::-webkit-scrollbar{width:10px;height:10px} ::-webkit-scrollbar-thumb{background:#243049;border-radius:8px}
+
+  /* ================= KOMPONEN ADMIN ================= */
+  .card{background:linear-gradient(180deg,rgba(20,29,51,.85),rgba(14,21,37,.85));border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:20px}
+  .card h2{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:.08em;line-height:1}
+  .label{display:block;font:700 11px Montserrat;letter-spacing:.14em;text-transform:uppercase;color:#8fa0bb;margin-bottom:6px}
+  .field{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:9px 12px;font-size:14px;color:#e6edf7;outline:none;transition:border-color .2s,box-shadow .2s}
+  .field:focus{border-color:var(--neon);box-shadow:0 0 0 3px rgba(61,255,122,.15)}
+  .field::placeholder{color:#64748b}
+  .field:disabled{opacity:.55}
+  select.field option{background:#0e1525}
+  .btn{font:700 12px Montserrat;letter-spacing:.06em;text-transform:uppercase;padding:9px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.14);color:#dbe4f3;background:rgba(255,255,255,.05);cursor:pointer;transition:all .2s;white-space:nowrap}
+  .btn:hover{background:rgba(255,255,255,.11)}
+  .btn:disabled{opacity:.35;cursor:not-allowed}
+  .btn.neon{background:var(--neon);color:#04210f;border-color:transparent}
+  .btn.neon:hover{filter:brightness(1.08);background:var(--neon)}
+  .btn.danger{color:#ff9a9a;border-color:rgba(255,100,100,.35)}
+  .btn.danger:hover{background:rgba(255,80,80,.12)}
+  .btn.sm{padding:6px 10px;font-size:11px}
+  .tab{padding:8px 16px;border-radius:999px;font:700 12px Montserrat;letter-spacing:.06em;text-transform:uppercase;color:#94a3b8;cursor:pointer;transition:all .2s;background:transparent;border:0}
+  .tab:hover{color:#fff}
+  .tab.active{background:var(--neon);color:#04210f}
+  .rtab{padding:8px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);font:700 12px Montserrat;color:#b6c3d8;cursor:pointer;transition:all .2s}
+  .rtab small{opacity:.7;margin-left:6px;font-weight:600}
+  .rtab:hover{background:rgba(255,255,255,.09)}
+  .rtab.active{background:rgba(61,255,122,.14);border-color:var(--neon);color:var(--neon)}
+  .thumb{width:64px;height:44px;flex:0 0 64px;border-radius:10px;background:rgba(255,255,255,.92);display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .thumb img{max-width:90%;max-height:90%;object-fit:contain}
+  .thumb.empty{background:rgba(255,255,255,.05);border:1px dashed rgba(255,255,255,.2)}
+
+  /* kartu pertandingan di Bracket Manager */
+  .am{border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:12px;background:rgba(255,255,255,.03)}
+  .am.ready{border-color:rgba(255,200,61,.5)}
+  .am.done{border-color:rgba(61,255,122,.4)}
+  .am-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;font:700 11px Montserrat;letter-spacing:.12em;text-transform:uppercase;color:#8fa0bb}
+  .chip{padding:2px 8px;border-radius:999px;font-size:10px;letter-spacing:.08em;background:rgba(255,255,255,.08);color:#9fb0c8}
+  .chip.ready{background:rgba(255,200,61,.16);color:var(--gold)}
+  .chip.done{background:rgba(61,255,122,.16);color:var(--neon)}
+  .am .r{display:flex;align-items:center;gap:8px;padding:5px 0}
+  .am .seed-b{width:22px;flex:0 0 22px;text-align:center;font:700 11px 'Barlow Condensed';color:#7f8ca3}
+  .am .nm{flex:1;min-width:0;font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .am .nm.mute{color:#64748b;font-style:italic;font-weight:500}
+  .am .r.win .nm{color:var(--neon)}
+  .am .sc{width:46px!important;flex:0 0 46px;text-align:center;font:700 16px 'Barlow Condensed';padding:5px 2px}
+  .am-msg{min-height:16px;font-size:11px;color:#ff9a9a;padding-top:6px}
+  .am-msg.ok{color:#8fa0bb}
+  .am .gl{width:46px;flex:0 0 46px;text-align:center;font:700 10px Montserrat;letter-spacing:.1em;color:#8fa0bb}
+
+  #toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,30px);opacity:0;pointer-events:none;z-index:200;padding:12px 18px;border-radius:12px;background:#10261a;border:1px solid var(--neon);color:#d9ffe8;font:600 13px Montserrat;transition:all .35s ease-in-out}
+  #toast.show{opacity:1;transform:translate(-50%,0)}
+  #toast.err{background:#3b1219;border-color:#ff6b6b;color:#ffd9d9}
+
+  /* ================= TV MODE ================= */
+  #tvRoot{position:fixed;inset:0;display:flex;flex-direction:column;z-index:60}
+  #tvHeader{position:relative;flex:0 0 auto;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:10px 28px 8px;border-bottom:1px solid rgba(255,255,255,.07);background:linear-gradient(180deg,rgba(14,21,37,.92),rgba(7,11,20,.25))}
+  .hd-center{display:flex;flex-direction:column;align-items:center;gap:4px}
+  #logoWrap{display:flex;align-items:center;justify-content:center;min-height:58px}
+  #logoWrap img{height:58px;max-width:340px;object-fit:contain}
+  .brand{font:400 52px/1 'Bebas Neue',sans-serif;letter-spacing:.14em;display:flex;align-items:center;gap:14px}
+  .brand span{background:linear-gradient(180deg,#fff 10%,var(--gold) 95%);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .subtitle{font:700 12px Montserrat;letter-spacing:.5em;color:var(--neon);text-transform:uppercase;padding-left:.5em}
+  #sponsorStrip{display:flex;gap:10px;align-items:center;justify-content:center;margin-top:4px;flex-wrap:wrap}
+  .sp{height:28px;padding:0 10px;border-radius:8px;background:rgba(255,255,255,.93);display:flex;align-items:center}
+  .sp img{height:20px;max-width:110px;object-fit:contain}
+  .hd-left,.hd-right{display:flex;align-items:center;gap:14px;font:600 12px Montserrat;color:#8fa0bb;letter-spacing:.12em;text-transform:uppercase}
+  .hd-right{justify-content:flex-end}
+  .live{display:inline-flex;align-items:center;gap:8px;color:#ff7b7b}
+  .live i{width:9px;height:9px;border-radius:50%;background:#ff4d4d;box-shadow:0 0 12px #ff4d4d;animation:pulse 1.6s infinite}
+  @keyframes pulse{50%{opacity:.3}}
+
+  #viewport{position:relative;flex:1 1 auto;overflow:hidden}
+  /* STAGE = kanvas bracket yang di-zoom/translate oleh JS */
+  #stage{position:absolute;left:0;top:0;display:flex;gap:var(--colgap);transform-origin:0 0;transition:transform var(--zoom-dur) ease-in-out}
+  #stage.no-anim{transition:none}
+  #lines{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+  #lines path{fill:none;stroke:rgba(148,163,184,.30);stroke-width:2;stroke-linejoin:round;transition:opacity .5s ease-in-out,stroke .5s ease-in-out}
+  #lines path.on{stroke:var(--neon);filter:drop-shadow(0 0 4px rgba(61,255,122,.7))}
+  #lines path.dim{opacity:.12}
+
+  .col{display:flex;flex-direction:column;width:var(--cw)}
+  .col-title{height:44px;display:flex;align-items:center;justify-content:center;font:400 26px 'Bebas Neue',sans-serif;letter-spacing:.12em;color:var(--neon);text-align:center;transition:opacity .5s ease-in-out,filter .5s ease-in-out}
+  .col.center .col-title{color:var(--gold)}
+  .col-body{display:flex;flex-direction:column;height:var(--bodyh)}
+  .slot{flex:1;display:flex;align-items:center;justify-content:center}
+  .final-slot{position:relative}
+
+  .mcard{position:relative;width:var(--cw);border-radius:10px;overflow:hidden;background:linear-gradient(180deg,#131c32,#0d1424);border:1px solid rgba(148,163,184,.22);box-shadow:0 6px 18px rgba(0,0,0,.45);transition:all .5s ease-in-out}
+  .mcard.ready{border-color:rgba(255,200,61,.7);box-shadow:0 0 0 1px rgba(255,200,61,.25),0 0 22px rgba(255,200,61,.2)}
+  .mcard.final{border-color:rgba(255,200,61,.6)}
+  .mcard.void{visibility:hidden}
+  .mcard.dim,.col-title.dim,.champ.dim{opacity:.18!important;filter:grayscale(.6)}
+
+  .trow{position:relative;height:var(--rowh);display:flex;align-items:center;gap:8px;padding:0 8px 0 0}
+  .trow + .trow{border-top:1px solid rgba(148,163,184,.14)}
+  .seed{width:26px;flex:0 0 26px;text-align:center;font:600 11px 'Barlow Condensed',sans-serif;color:#7f8ca3}
+  .tname{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;font:600 15px/1.05 'Barlow Condensed',sans-serif;color:#dbe4f3}
+  .tname span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tname.bye,.tname.tbd{color:#5d6b84;font-style:italic;font-weight:500}
+  .tscore{min-width:28px;text-align:center;font:700 20px 'Barlow Condensed',sans-serif;padding:1px 6px;border-radius:6px;background:rgba(255,255,255,.06);color:#9aa8bf}
+  .tscore.ghost{visibility:hidden}
+  .gs{width:24px;flex:0 0 24px;text-align:center;font:600 17px 'Barlow Condensed',sans-serif;color:#8d9bb3}
+  .gs.w{color:var(--neon);font-weight:700}
+  .gs.ghost{visibility:hidden}
+  .trow.win .gs.w{color:#7dffa8}
+  .trow.lose .gs{color:#7d8aa1}
+  .trow.win{background:linear-gradient(90deg,rgba(61,255,122,.18),transparent 88%)}
+  .trow.win::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--neon)}
+  .trow.win .tname{color:#fff}
+  .trow.win .tscore{background:var(--neon);color:#04210f}
+  .trow.lose{opacity:.6}
+  .trow.adv .tname{color:#b9f5cf}
+
+  /* blok juara di atas kartu Final */
+  .champ{position:absolute;left:50%;bottom:calc(50% + 55px);transform:translateX(-50%);width:calc(var(--cw) + 30px);text-align:center;transition:opacity .5s ease-in-out,filter .5s ease-in-out}
+  .champ .trophy{font-size:54px;line-height:1;filter:grayscale(1) opacity(.35);transition:filter .5s}
+  .champ.has .trophy{filter:drop-shadow(0 0 18px rgba(255,200,61,.85))}
+  .champ .cl{font:400 18px 'Bebas Neue',sans-serif;letter-spacing:.35em;color:var(--gold);padding-left:.35em}
+  .champ .cn{font:700 22px/1.1 'Barlow Condensed',sans-serif;color:#fff;overflow-wrap:anywhere}
+  .champ.has .cn{text-shadow:0 0 18px rgba(255,200,61,.55)}
+
+  #hud{position:absolute;left:24px;top:12px;z-index:40;opacity:0;transform:translateY(-6px);transition:all .5s ease-in-out;pointer-events:none}
+  #hud.show{opacity:1;transform:none}
+  #hud small{display:block;font:700 11px Montserrat;letter-spacing:.35em;color:#8fa0bb}
+  #hud b{font:400 40px/1 'Bebas Neue',sans-serif;letter-spacing:.1em;color:var(--neon);text-shadow:0 0 20px rgba(61,255,122,.45)}
+  #emptyMsg{position:absolute;inset:0;display:grid;place-items:center;font:400 34px 'Bebas Neue',sans-serif;letter-spacing:.15em;color:#5d6b84;z-index:30;pointer-events:none}
+
+  /* Floating Action Bar: semi-transparan, memudar saat idle */
+  #bar{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:70;display:flex;gap:4px;align-items:center;padding:7px;max-width:96vw;overflow-x:auto;border-radius:999px;background:rgba(14,21,37,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.12);box-shadow:0 10px 40px rgba(0,0,0,.5);transition:opacity .5s ease-in-out}
+  #bar.idle{opacity:.25}
+  #bar:hover{opacity:1}
+  #bar .sep{width:1px;height:22px;background:rgba(255,255,255,.18);margin:0 6px;flex:0 0 1px}
+  .fbtn{font:700 13px Montserrat;letter-spacing:.06em;text-transform:uppercase;padding:10px 16px;border-radius:999px;border:1px solid transparent;color:#cbd5e1;background:transparent;cursor:pointer;transition:all .3s ease-in-out;white-space:nowrap}
+  .fbtn:hover{background:rgba(255,255,255,.1);color:#fff}
+  .fbtn.active{background:var(--neon);color:#052613;box-shadow:0 0 18px rgba(61,255,122,.55)}
+  .fbtn.util{padding:10px 12px}
+</style>
+</head>
+
+<body>
+
+<!-- =====================================================================
+     ADMIN MODE
+     ===================================================================== -->
+<div id="adminRoot">
+  <header class="sticky top-0 z-40 border-b border-white/10 bg-ink/85 backdrop-blur">
+    <div class="mx-auto flex max-w-7xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3">
+      <div class="flex items-center gap-3">
+        <div class="grid h-10 w-10 place-items-center rounded-xl bg-neon/15 ring-1 ring-neon/40" id="adminLogoIcon"></div>
+        <div>
+          <div class="font-display text-2xl leading-none tracking-wider">PDM CUP 2026</div>
+          <div class="text-[11px] font-semibold uppercase tracking-[.25em] text-neon">Ganda Putra · Admin</div>
+        </div>
+      </div>
+      <nav id="tabs" class="flex gap-1 rounded-full bg-white/5 p-1">
+        <button class="tab" data-tab="setup">Pengaturan</button>
+        <button class="tab" data-tab="teams">Tim</button>
+        <button class="tab" data-tab="bracket">Bracket</button>
+      </nav>
+      <div class="ml-auto flex flex-wrap items-center gap-2">
+        <span id="savedLabel" class="text-xs text-slate-400"></span>
+        <button id="btnSave" class="btn">Simpan</button>
+        <button id="btnTvTab" class="btn">Buka TV di Tab Baru ↗</button>
+        <button id="btnLock" class="btn">🔒 Kunci</button>
+        <button id="btnTvHere" class="btn neon">Mode TV ▶</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-7xl px-4 py-6">
+
+    <!-- ===== PANEL: PENGATURAN ===== -->
+    <section data-panel="setup" class="grid gap-6 lg:grid-cols-2">
+      <div class="card lg:col-span-2">
+        <h2>Logo &amp; Sponsor</h2>
+        <p class="mt-2 text-xs text-slate-400">Tempel URL gambar (https://…). Logo event tampil di tengah header TV, logo sponsor tampil di bawahnya.</p>
+        <div class="mt-4 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+          <div>
+            <label class="label" for="inLogo">Logo Event</label>
+            <div class="flex items-center gap-3">
+              <div class="thumb empty" id="prevLogo"></div>
+              <input id="inLogo" class="field" placeholder="https://contoh.com/logo-pdm-cup.png">
+            </div>
+          </div>
+          <div>
+            <div class="label">Logo Sponsor (maks. 6)</div>
+            <div id="sponsorList" class="grid gap-3 sm:grid-cols-2"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Pengaturan Bracket</h2>
+        <div class="mt-4 grid gap-4">
+          <div>
+            <label class="label" for="selSize">Ukuran Bracket</label>
+            <select id="selSize" class="field">
+              <option value="auto">Otomatis (menyesuaikan jumlah tim)</option>
+              <option value="4">4 slot</option><option value="8">8 slot</option><option value="16">16 slot</option>
+              <option value="32">32 slot</option><option value="64">64 slot (penuh)</option>
+            </select>
+          </div>
+          <div>
+            <label class="label" for="selSeed">Pola Undian</label>
+            <select id="selSeed" class="field">
+              <option value="seed">Seed standar (BYE diberikan ke unggulan teratas)</option>
+              <option value="order">Urut pendaftaran (1 vs 2, 3 vs 4, …)</option>
+            </select>
+          </div>
+          <div>
+            <label class="label" for="selPts">Poin per Game</label>
+            <select id="selPts" class="field">
+              <option value="21">21 poin (standar BWF, maks. 30)</option>
+              <option value="15">15 poin (maks. 24)</option>
+              <option value="11">11 poin (maks. 20)</option>
+            </select>
+          </div>
+          <div>
+            <label class="label" for="selBo">Format Pertandingan (Rubber)</label>
+            <select id="selBo" class="field">
+              <option value="3">Best of 3 game (rubber)</option>
+              <option value="1">1 game</option>
+              <option value="5">Best of 5 game</option>
+            </select>
+          </div>
+          <p class="text-xs text-slate-400">Mengubah pengaturan ini menyusun ulang bracket dan mereset skor.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Data</h2>
+        <p class="mt-2 text-xs text-slate-400">Semua perubahan otomatis tersimpan di localStorage browser ini. Tombol di bawah untuk simpan manual dan reset.</p>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button id="btnSave2" class="btn neon">Simpan Manual</button>
+          <button id="btnDemo" class="btn">Muat Data Contoh</button>
+          <button id="btnResetScores" class="btn danger">Reset Skor</button>
+          <button id="btnWipe" class="btn danger">Hapus Semua Data</button>
+        </div>
+      </div>
+
+      <div class="card lg:col-span-2">
+        <h2>Keamanan Admin</h2>
+        <p class="mt-2 text-xs text-slate-400">Ganti password admin. Password baru hanya tersimpan di browser ini. Agar berlaku di semua perangkat, salin hash yang muncul ke konstanta <span class="text-slate-200">ADMIN_HASH</span> di bagian atas script, lalu upload ulang file.</p>
+        <div class="mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+          <input id="pwNew" type="password" class="field" placeholder="Password baru (min. 6 karakter)" autocomplete="new-password">
+          <input id="pwNew2" type="password" class="field" placeholder="Ulangi password baru" autocomplete="new-password">
+          <button id="btnSetPw" class="btn neon">Simpan Password</button>
+        </div>
+        <div id="pwHash" class="is-hidden mt-3 break-all rounded-lg bg-white/5 p-3 text-xs text-slate-300"></div>
+        <button id="btnResetPw" class="btn danger sm mt-3">Kembalikan ke Password Bawaan</button>
+      </div>
+    </section>
+
+    <!-- ===== PANEL: TIM ===== -->
+    <section data-panel="teams" class="grid gap-6 lg:grid-cols-[380px_minmax(0,1fr)]">
+      <div class="space-y-6">
+        <div class="card">
+          <h2>Tambah Pasangan</h2>
+          <div class="mt-4 grid gap-3">
+            <div><label class="label" for="p1">Pemain 1</label><input id="p1" class="field" placeholder="Nama pemain 1" autocomplete="off"></div>
+            <div><label class="label" for="p2">Pemain 2</label><input id="p2" class="field" placeholder="Nama pemain 2" autocomplete="off"></div>
+            <button id="btnAddTeam" class="btn neon">+ Daftarkan Tim</button>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Impor Massal</h2>
+          <p class="mt-2 text-xs text-slate-400">Satu pasangan per baris, format <span class="text-slate-200">Nama 1 / Nama 2</span>.</p>
+          <textarea id="bulk" rows="6" class="field mt-3" placeholder="Budi Santoso / Andi Wijaya&#10;Rizky Pratama / Fajar Nugroho"></textarea>
+          <button id="btnBulk" class="btn mt-3">Tambahkan Semua</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="flex flex-wrap items-center gap-3">
+          <h2 class="mr-auto">Daftar Tim <span id="teamCount" class="text-neon"></span></h2>
+          <button id="btnShuffle" class="btn">🔀 Acak Undian</button>
+        </div>
+        <p class="mt-2 text-xs text-slate-400">Urutan daftar = nomor unggulan (seed). Gunakan panah untuk menukar urutan; nama bisa diedit langsung.</p>
+        <ol id="teamList" class="mt-4 grid gap-2 md:grid-cols-2"></ol>
+      </div>
+    </section>
+
+    <!-- ===== PANEL: BRACKET ===== -->
+    <section data-panel="bracket" class="space-y-6">
+      <div class="card" id="mgrSummary"></div>
+      <div class="card">
+        <h2>Kontrol Layar TV</h2>
+        <p class="mt-2 text-xs text-slate-400">Arahkan fokus kamera di tab TV dari sini (tab TV harus terbuka di browser yang sama).</p>
+        <div id="tvCtl" class="mt-3 flex flex-wrap gap-2"></div>
+      </div>
+      <div class="card">
+        <div class="flex flex-wrap items-center gap-3">
+          <h2 class="mr-auto">Bracket Manager</h2>
+          <label class="flex cursor-pointer items-center gap-2 text-sm text-slate-300">
+            <input type="checkbox" id="chkAuto" class="h-4 w-4 accent-[#3dff7a]"> Majukan pemenang otomatis saat kedua skor terisi
+          </label>
+        </div>
+        <p class="mt-2 text-xs text-slate-400">Isi skor asli tiap game (G1, G2, G3), mis. G1 21–10, G2 22–20. Game selesai di 21 poin dengan selisih 2 (maks. 30). Pemenang = yang lebih dulu menang 2 game; G3 hanya diisi jika skor game 1–1.</p>
+        <div id="roundTabs" class="mt-4 flex flex-wrap gap-2"></div>
+        <div id="matchGrid" class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- =====================================================================
+     TV MODE
+     ===================================================================== -->
+<div id="tvRoot" class="is-hidden">
+  <header id="tvHeader">
+    <div class="hd-left"><span class="live"><i></i>Live Bracket</span><span id="clock"></span></div>
+    <div class="hd-center">
+      <div id="logoWrap"></div>
+      <div class="subtitle">Ganda Putra</div>
+      <div id="sponsorStrip"></div>
+    </div>
+    <div class="hd-right" id="hdStats"></div>
+  </header>
+
+  <div id="viewport">
+    <div id="stage"></div>
+    <div id="hud"><small>FOKUS</small><b></b></div>
+    <div id="emptyMsg" class="is-hidden">Belum ada tim terdaftar</div>
+  </div>
+
+  <!-- Floating Action Bar -->
+  <nav id="bar" aria-label="Navigasi babak"></nav>
+</div>
+
+<!-- Layar login admin -->
+<div id="loginRoot" class="is-hidden fixed inset-0 z-[90] grid place-items-center bg-ink px-4">
+  <form id="loginForm" class="card w-full max-w-sm text-center" autocomplete="off">
+    <div id="loginIcon" class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-neon/15 ring-1 ring-neon/40"></div>
+    <div class="mt-4 font-display text-3xl tracking-wider">PDM CUP 2026</div>
+    <div class="text-[11px] font-semibold uppercase tracking-[.25em] text-neon">Admin Panel</div>
+    <input id="loginPw" type="password" class="field mt-6" placeholder="Password admin" autocomplete="current-password">
+    <div id="loginMsg" class="mt-2 min-h-[18px] text-xs text-red-300"></div>
+    <button class="btn neon mt-3 w-full" type="submit">Masuk</button>
+    <button class="btn mt-2 w-full" type="button" id="btnLoginTv">Lihat Tampilan TV</button>
+  </form>
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function () {
+'use strict';
+
+/* =====================================================================
+   1. KONSTANTA & STATE
+   ===================================================================== */
+const KEY = 'pdmcup2026_state_v2';          // data utama (tim, skor, logo, dll.)
+const FOCUS_KEY = 'pdmcup2026_tvfocus_v1';  // perintah fokus kamera dari Admin -> TV
+const MAX_TEAMS = 64;
+
+/* ---- PASSWORD ADMIN ----
+   ADMIN_HASH = SHA-256 dari "pdmcup2026|<password>". Password bawaan: pdmcup2026 (SEGERA GANTI).
+   Catatan: ini situs statis, jadi password hanya menghalangi akses biasa, bukan pengamanan sungguhan. */
+const ADMIN_HASH = 'abd74a4a77e9b4e97b509a055483ec6354ad8be4286161c3fe6d68826d5614a4';
+const PW_KEY = 'pdmcup2026_pw_v1', AUTH_KEY = 'pdmcup2026_auth_v1';
+const BYE = { type: 'bye' }, TBD = { type: 'tbd' };
+
+const ROUND_FULL  = { 64:'Babak 64 Besar', 32:'Babak 32 Besar', 16:'Babak 16 Besar', 8:'Perempat Final', 4:'Semi Final', 2:'Final' };
+const ROUND_SHORT = { 64:'Babak 64', 32:'Babak 32', 16:'Babak 16', 8:'Quarter Final', 4:'Semi Final', 2:'Final' };
+
+const LOGO_SVG = '<svg width="42" height="42" viewBox="0 0 64 64" fill="none" stroke="#3dff7a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><circle cx="46" cy="46" r="9" fill="#3dff7a"/><path d="M40 40 L12 20"/><path d="M40 40 L20 12"/><path d="M40 40 L27 8"/><path d="M40 40 L8 28"/></svg>';
+
+// Data contoh (urutan = nomor unggulan / seed)
+const DUMMY_TEAMS = [
+  'Budi Santoso / Andi Wijaya','Rizky Pratama / Fajar Nugroho','Dimas Anggara / Yoga Permana','Hendra Gunawan / Bayu Saputra',
+  'Agus Setiawan / Rudi Kurniawan','Eko Prasetyo / Wahyu Nugraha','Doni Firmansyah / Ilham Maulana','Reza Alamsyah / Arif Rahman',
+  'Galih Permadi / Satria Putra','Joko Susilo / Bagas Pratama','Anton Wibowo / Rendi Kurnia','Fikri Ramadhan / Naufal Hakim',
+  'Surya Dharma / Lukman Hakim','Teguh Santosa / Irfan Maulidi','Candra Kusuma / Dedi Kurniawan','Haris Munandar / Oki Saputra'
+];
+// [babak, indeks pertandingan, skor A, skor B] -> hasil awal agar bracket tidak kosong
+// [babak, indeks pertandingan, [[A,B] per game]] -> hasil awal agar bracket tidak kosong
+const DUMMY_SCORES = [
+  [0,0,[[21,10],[21,15]]], [0,1,[[21,18],[19,21],[21,17]]], [0,2,[[15,21],[18,21]]],
+  [0,3,[[21,12],[22,20]]], [0,4,[[21,9],[21,11]]], [0,5,[[21,19],[17,21],[19,21]]],
+  [1,0,[[21,16],[21,18]]]
+];
+
+function emptyState() {
+  return { v:1, eventLogo:'', sponsors:['','','','','',''], teams:[], matches:{}, sizeMode:'auto', seedMode:'seed', autoAdvance:true, pointsTarget:21, bestOf:3, savedAt:null };
+}
+function defaultState() {
+  const s = emptyState();
+  s.teams = DUMMY_TEAMS.slice();
+  DUMMY_SCORES.forEach(([r,i,g]) => { s.matches[r+'-'+i] = { g, done:true }; });
+  return s;
+}
+function normalize(o) {
+  const s = Object.assign(emptyState(), o || {});
+  s.teams = Array.isArray(s.teams) ? s.teams.slice(0, MAX_TEAMS).map(String) : [];
+  s.matches = (s.matches && typeof s.matches === 'object') ? s.matches : {};
+  s.bestOf = [1,3,5].includes(+s.bestOf) ? +s.bestOf : 3;
+  s.pointsTarget = [11,15,21].includes(+s.pointsTarget) ? +s.pointsTarget : 21;
+  const sp = Array.isArray(s.sponsors) ? s.sponsors.slice(0, 6) : [];
+  while (sp.length < 6) sp.push('');
+  s.sponsors = sp;
+  return s;
+}
+
+let state, lastRaw = null, lastFocusRaw = null;
+let mode = 'admin';
+
+/* =====================================================================
+   2. PERSISTENSI (localStorage)
+   ===================================================================== */
+function loadState() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) { lastRaw = raw; return normalize(JSON.parse(raw)); }
+  } catch (e) { /* data rusak -> pakai default */ }
+  const s = defaultState();
+  state = s; save();
+  return s;
+}
+function save() {
+  state.savedAt = Date.now();
+  try {
+    const raw = JSON.stringify(state);
+    localStorage.setItem(KEY, raw);
+    lastRaw = raw;
+  } catch (e) { toast('Gagal menyimpan: penyimpanan browser penuh atau diblokir', 'err'); }
+  updateSavedLabel();
+}
+
+/* =====================================================================
+   3. BRACKET ENGINE (murni data, tanpa DOM)
+   ===================================================================== */
+const $  = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function splitName(n) {
+  const p = String(n).split(/\s*[\/&]\s*/).map(x => x.trim()).filter(Boolean);
+  return p.length === 2 ? p : [String(n)];
+}
+function nextPow2(n, min) { let p = min || 4; while (p < n) p *= 2; return p; }
+function bracketSize(s) {
+  const need = Math.min(64, nextPow2(s.teams.length));
+  if (s.sizeMode === 'auto') return need;
+  return Math.min(64, Math.max(need, parseInt(s.sizeMode, 10) || need));
+}
+// Urutan seed standar: 1 vs N, 2 vs N-1, … (seed 1 & 2 berada di sisi berlawanan)
+function seedOrder(size) {
+  let o = [1, 2];
+  for (let n = 4; n <= size; n *= 2) o = o.flatMap(x => [x, n + 1 - x]);
+  return o;
+}
+// Satu game sah: sampai T poin (selisih 2), jika sama-sama tinggi berlanjut sampai selisih 2, maksimal T+9
+function gameValid(a, b, T) {
+  if (!Number.isInteger(a) || !Number.isInteger(b) || a < 0 || b < 0 || a === b) return false;
+  const w = Math.max(a, b), l = Math.min(a, b), cap = T + 9;
+  if (w < T || w > cap) return false;
+  if (w === T) return l <= T - 2;
+  if (w < cap) return l === w - 2;
+  return l === cap - 1;
+}
+// Evaluasi satu pertandingan dari daftar skor game: [[a,b],[a,b],[a,b]]
+function evalMatch(g, s) {
+  const need = Math.floor(s.bestOf / 2) + 1;
+  let wa = 0, wb = 0, valid = true, gap = false;
+  for (let k = 0; k < s.bestOf; k++) {
+    const x = g && g[k], fa = x && x[0] != null, fb = x && x[1] != null;
+    if (!fa && !fb) { gap = true; continue; }
+    if (!fa || !fb || gap || wa >= need || wb >= need) { valid = false; continue; }   // skor setengah, game kosong di tengah, atau game berlebih
+    if (!gameValid(x[0], x[1], s.pointsTarget)) { valid = false; continue; }
+    if (x[0] > x[1]) wa++; else wb++;
+  }
+  const decided = wa >= need || wb >= need;
+  return { wa, wb, valid, decided, complete: valid && decided };
+}
+function touched(d) { return !!d && (d.done || (d.g || []).some(x => x && (x[0] != null || x[1] != null))); }
+
+/* Menghitung seluruh bracket dari state.
+   kind: 'void' (BYE vs BYE, disembunyikan) | 'bye' (tim lolos otomatis) |
+         'wait' (menunggu pemenang) | 'ready' (siap main) | 'done' (selesai) */
+function computeBracket(s) {
+  const N = s.teams.length, size = bracketSize(s), R = Math.log2(size);
+  const order = s.seedMode === 'order' ? Array.from({ length: size }, (_, k) => k + 1) : seedOrder(size);
+  const slot = k => { const sd = order[k]; return sd <= N ? { type:'team', seed:sd, name:s.teams[sd - 1] } : BYE; };
+  const rounds = []; let no = 0;
+  for (let r = 0; r < R; r++) {
+    const cnt = size >> (r + 1), arr = [];
+    for (let i = 0; i < cnt; i++) {
+      const a = r === 0 ? slot(2 * i)     : rounds[r - 1][2 * i].winner;
+      const b = r === 0 ? slot(2 * i + 1) : rounds[r - 1][2 * i + 1].winner;
+      const d = s.matches[r + '-' + i] || {};
+      const res = evalMatch(d.g, s);
+      const m = { r, i, a, b, g: d.g || [], res, kind:'wait', winner:TBD, no:0 };
+      if (a.type === 'bye' && b.type === 'bye') { m.kind = 'void'; m.winner = BYE; }
+      else if (a.type === 'bye' || b.type === 'bye') { m.kind = 'bye'; m.winner = a.type === 'bye' ? b : a; }
+      else if (a.type === 'team' && b.type === 'team') {
+        if (d.done && res.complete) { m.kind = 'done'; m.winner = res.wa > res.wb ? a : b; }   // << Advance Winner: pemenang = menang game terbanyak
+        else m.kind = 'ready';
+      }
+      if (m.kind === 'ready' || m.kind === 'wait' || m.kind === 'done') m.no = ++no;
+      arr.push(m);
+    }
+    rounds.push(arr);
+  }
+  const w = rounds[R - 1][0].winner;
+  return { size, R, N, rounds, champ: w.type === 'team' ? w : null };
+}
+function countDone(B) { let n = 0; B.rounds.forEach(r => r.forEach(m => { if (m.kind === 'done') n++; })); return n; }
+function hasResults() { return Object.values(state.matches).some(touched); }
+
+// Hapus data pertandingan di babak-babak berikutnya yang bergantung pada match (r,i)
+function clearDownstream(r, i) {
+  const R = Math.log2(bracketSize(state));
+  if (r >= R - 1) return;
+  const nr = r + 1, ni = i >> 1;
+  delete state.matches[nr + '-' + ni];
+  clearDownstream(nr, ni);
+}
+function downstreamTouched(r, i, R) {
+  if (r >= R - 1) return false;
+  const nr = r + 1, ni = i >> 1, n = state.matches[nr + '-' + ni];
+  if (touched(n)) return true;
+  return downstreamTouched(nr, ni, R);
+}
+function setDone(r, i, flag) {
+  const k = r + '-' + i;
+  const d = state.matches[k] || (state.matches[k] = {});
+  d.done = flag;
+  if (!flag) clearDownstream(r, i);
+}
+
+/* =====================================================================
+   4. ADMIN UI
+   ===================================================================== */
+let adminTab = 'setup', adminRound = -1, tvCtlFocus = 'full';
+let toastT;
+
+function toast(msg, type) {
+  const t = $('#toast'); t.textContent = msg; t.className = 'show ' + (type || '');
+  clearTimeout(toastT); toastT = setTimeout(() => { t.className = ''; }, 2400);
+}
+function updateSavedLabel() {
+  const el = $('#savedLabel'); if (!el) return;
+  el.textContent = state.savedAt ? 'Tersimpan ' + new Date(state.savedAt).toLocaleTimeString('id-ID') : 'Belum disimpan';
+}
+function showTab(name) {
+  adminTab = name;
+  $$('[data-panel]').forEach(p => p.classList.toggle('is-hidden', p.dataset.panel !== name));
+  $$('#tabs .tab').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+}
+function thumbHTML(u) {
+  return u ? '<img src="' + esc(u) + '" alt="" onerror="this.style.visibility=\'hidden\'">' : '';
+}
+
+function renderAdmin() {
+  renderSettings(); renderTeams(); renderManager(); showTab(adminTab); updateSavedLabel();
+  $('#chkAuto').checked = !!state.autoAdvance;
+}
+
+/* ---- Pengaturan: logo & sponsor ---- */
+function renderSettings() {
+  $('#inLogo').value = state.eventLogo || '';
+  const pv = $('#prevLogo'); pv.innerHTML = thumbHTML(state.eventLogo); pv.classList.toggle('empty', !state.eventLogo);
+  $('#sponsorList').innerHTML = state.sponsors.map((u, i) =>
+    '<div class="flex items-center gap-3"><div class="thumb ' + (u ? '' : 'empty') + '" data-spthumb="' + i + '">' + thumbHTML(u) + '</div>' +
+    '<input class="field" data-sp="' + i + '" value="' + esc(u) + '" placeholder="Sponsor ' + (i + 1) + ' (URL)"></div>').join('');
+  $('#selSize').value = String(state.sizeMode);
+  $('#selSeed').value = state.seedMode;
+  $('#selPts').value = String(state.pointsTarget);
+  $('#selBo').value = String(state.bestOf);
+}
+
+/* ---- Registrasi tim ---- */
+function restructure(fn) {
+  if (hasResults() && !confirm('Mengubah susunan tim / pengaturan bracket akan mereset semua skor. Lanjutkan?')) return false;
+  fn(); state.matches = {}; adminRound = -1; save();
+  renderTeams(); renderManager();
+  return true;
+}
+function renderTeams() {
+  $('#teamCount').textContent = state.teams.length + ' / ' + MAX_TEAMS;
+  const L = state.teams.length;
+  $('#teamList').innerHTML = L ? state.teams.map((n, i) =>
+    '<li class="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[.03] p-2">' +
+      '<span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-neon/15 text-xs font-bold text-neon">' + (i + 1) + '</span>' +
+      '<input class="field !py-1.5" data-act="rename" data-idx="' + i + '" value="' + esc(n) + '">' +
+      '<button class="btn sm" data-act="up" data-idx="' + i + '" ' + (i === 0 ? 'disabled' : '') + '>↑</button>' +
+      '<button class="btn sm" data-act="down" data-idx="' + i + '" ' + (i === L - 1 ? 'disabled' : '') + '>↓</button>' +
+      '<button class="btn sm danger" data-act="del" data-idx="' + i + '">✕</button></li>').join('')
+    : '<li class="text-sm text-slate-400 md:col-span-2">Belum ada tim. Tambahkan pasangan di panel kiri.</li>';
+}
+function addTeams(names) {
+  const room = MAX_TEAMS - state.teams.length;
+  if (room <= 0) { toast('Kapasitas 64 tim sudah penuh', 'err'); return 0; }
+  const add = names.slice(0, room);
+  const ok = restructure(() => { state.teams.push(...add); });
+  if (ok && names.length > room) toast('Hanya ' + room + ' tim yang ditambahkan (maks. 64)', 'err');
+  return ok ? add.length : 0;
+}
+
+/* ---- Bracket Manager ---- */
+function defaultRound(B) {
+  for (let r = 0; r < B.R; r++) if (B.rounds[r].some(m => m.kind === 'ready')) return r;
+  return B.R - 1;
+}
+function focusIdsFor(B) { const ids = ['full']; for (let r = 1; r < B.R; r++) ids.push(r); return ids; }
+function focusLabel(B, id) { return id === 'full' ? 'Full ' + B.size : ROUND_SHORT[B.size >> id]; }
+
+function renderManager() {
+  const B = computeBracket(state);
+  if (adminRound < 0 || adminRound >= B.R) adminRound = defaultRound(B);
+  renderMgrChrome(B);
+  renderMatchGrid(B);
+}
+function renderMgrChrome(B) {
+  const done = countDone(B), total = Math.max(B.N - 1, 0), pct = total ? Math.round(done / total * 100) : 0;
+  $('#mgrSummary').innerHTML =
+    '<div class="flex flex-wrap items-end gap-x-10 gap-y-4">' +
+      '<div><div class="label">Pertandingan Selesai</div><div class="font-display text-5xl leading-none">' + done + '<span class="text-slate-500"> / ' + total + '</span></div></div>' +
+      '<div><div class="label">Ukuran Bracket</div><div class="font-display text-5xl leading-none">' + B.size + '</div></div>' +
+      '<div class="ml-auto text-right"><div class="label">Juara</div><div class="font-display text-3xl leading-none ' + (B.champ ? 'text-gold' : 'text-slate-500') + '">' +
+        (B.champ ? '🏆 ' + esc(B.champ.name) : 'Belum ditentukan') + '</div></div></div>' +
+    '<div class="mt-4 h-2 rounded-full bg-white/10"><div class="h-2 rounded-full bg-neon transition-all" style="width:' + pct + '%"></div></div>';
+
+  $('#roundTabs').innerHTML = B.rounds.map((arr, r) => {
+    const play = arr.filter(m => ['ready', 'wait', 'done'].includes(m.kind)), dn = play.filter(m => m.kind === 'done').length;
+    return '<button class="rtab ' + (r === adminRound ? 'active' : '') + '" data-r="' + r + '">' + ROUND_FULL[B.size >> r] + '<small>' + dn + '/' + play.length + '</small></button>';
+  }).join('');
+
+  $('#tvCtl').innerHTML = focusIdsFor(B).map(id =>
+    '<button class="btn ' + (String(tvCtlFocus) === String(id) ? 'neon' : '') + '" data-tvfocus="' + id + '">' + focusLabel(B, id) + '</button>').join('');
+}
+function amTeam(t) {
+  if (t.type === 'team') return '<span class="seed-b">' + t.seed + '</span><span class="nm" title="' + esc(t.name) + '">' + esc(t.name) + '</span>';
+  return '<span class="seed-b"></span><span class="nm mute">' + (t.type === 'bye' ? 'BYE' : 'Menunggu pemenang…') + '</span>';
+}
+function msgFor(m) {
+  const filled = (m.g || []).some(x => x && (x[0] != null || x[1] != null));
+  if (!filled) return ['', ''];
+  if (!m.res.valid) return ['Skor tidak valid. Game selesai di ' + state.pointsTarget + ' (selisih 2, maks. ' + (state.pointsTarget + 9) + '), tanpa game kosong atau berlebih.', ''];
+  if (!m.res.decided) return ['Skor game ' + m.res.wa + '–' + m.res.wb + '. Menunggu game berikutnya.', 'ok'];
+  return ['Pemenang ditentukan, skor game ' + m.res.wa + '–' + m.res.wb + '.', 'ok'];
+}
+function matchCardHTML(m) {
+  const key = m.r + '-' + m.i;
+  if (m.kind === 'bye') {
+    return '<div class="am" data-card="' + key + '"><div class="am-h"><span>BYE</span><span class="chip">Otomatis</span></div>' +
+      '<div class="r">' + amTeam(m.a) + '</div><div class="r">' + amTeam(m.b) + '</div></div>';
+  }
+  const edit = m.kind === 'ready', Gn = state.bestOf;
+  const labels = '<div class="r" style="padding:0"><span class="seed-b"></span><span class="nm"></span>' +
+    Array.from({ length: Gn }, (_, k) => '<span class="gl">G' + (k + 1) + '</span>').join('') + '</div>';
+  const row = (t, side, win) =>
+    '<div class="r ' + (win ? 'win' : '') + '">' + amTeam(t) +
+    Array.from({ length: Gn }, (_, k) => {
+      const v = m.g[k] ? m.g[k][side] : null;
+      return '<input type="number" min="0" inputmode="numeric" class="field sc" data-act="score" data-r="' + m.r + '" data-i="' + m.i + '" data-g="' + k + '" data-side="' + side + '" value="' + (v == null ? '' : v) + '" placeholder="G' + (k + 1) + '" ' + (edit ? '' : 'disabled') + ' aria-label="Skor game ' + (k + 1) + '">';
+    }).join('') + '</div>';
+  const wa = m.kind === 'done' && m.winner.seed === m.a.seed, wb = m.kind === 'done' && m.winner.seed === m.b.seed;
+  const chip = { ready:'Siap main', wait:'Menunggu', done:'Selesai' }[m.kind];
+  let foot = '';
+  if (m.kind === 'ready') foot = '<button class="btn sm neon" data-act="advance" ' + (m.res.complete ? '' : 'disabled') + '>Majukan Pemenang ▸</button>';
+  else if (m.kind === 'done') foot = '<button class="btn sm" data-act="undo">Ubah Hasil</button>';
+  const [txt, cls] = msgFor(m);
+  return '<div class="am ' + m.kind + '" data-card="' + key + '">' +
+    '<div class="am-h"><span>Match #' + m.no + '</span><span class="chip ' + m.kind + '">' + chip + '</span></div>' +
+    labels + row(m.a, 0, wa) + row(m.b, 1, wb) +
+    '<div class="am-msg ' + cls + '">' + esc(txt) + '</div>' +
+    (foot ? '<div class="mt-1 flex justify-end">' + foot + '</div>' : '') + '</div>';
+}
+function renderMatchGrid(B) {
+  const list = B.rounds[adminRound].filter(m => m.kind !== 'void');
+  $('#matchGrid').innerHTML = list.length ? list.map(matchCardHTML).join('')
+    : '<div class="text-sm text-slate-400">Tidak ada pertandingan di babak ini.</div>';
+}
+function refreshCard(r, i) {
+  const B = computeBracket(state), m = B.rounds[r][i], el = $('[data-card="' + r + '-' + i + '"]');
+  if (el) el.outerHTML = matchCardHTML(m);
+  renderMgrChrome(B);
+}
+function setGame(r, i, k, side, val) {
+  const key = r + '-' + i, d = state.matches[key] || (state.matches[key] = {});
+  d.g = d.g || [];
+  for (let x = 0; x < state.bestOf; x++) if (!d.g[x]) d.g[x] = [null, null];
+  d.g[k][side] = val === '' ? null : Math.max(0, parseInt(val, 10) || 0);
+}
+function updateCardStatus(card, r, i) {
+  const m = computeBracket(state).rounds[r][i];
+  const btn = $('[data-act="advance"]', card); if (btn) btn.disabled = !m.res.complete;
+  const el = $('.am-msg', card), [t, c] = msgFor(m); el.textContent = t; el.className = 'am-msg ' + c;
+}
+function doAdvance(r, i) { setDone(r, i, true); save(); refreshCard(r, i); }
+
+/* ---- Event listener Admin ---- */
+function bindAdmin() {
+  $('#tabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) showTab(b.dataset.tab); });
+  $('#btnSave').onclick = $('#btnSave2').onclick = () => { save(); toast('Data tersimpan'); };
+  $('#btnTvHere').onclick = () => setMode('tv');
+  $('#btnTvTab').onclick = () => window.open(location.href.split('#')[0] + '#tv', '_blank');
+
+  // Logo & sponsor
+  $('#inLogo').addEventListener('input', e => { state.eventLogo = e.target.value.trim(); save(); });
+  $('#inLogo').addEventListener('change', () => {
+    const pv = $('#prevLogo'); pv.innerHTML = thumbHTML(state.eventLogo); pv.classList.toggle('empty', !state.eventLogo);
+  });
+  $('#sponsorList').addEventListener('input', e => {
+    if (e.target.dataset.sp === undefined) return;
+    state.sponsors[+e.target.dataset.sp] = e.target.value.trim(); save();
+  });
+  $('#sponsorList').addEventListener('change', e => {
+    if (e.target.dataset.sp === undefined) return;
+    const i = +e.target.dataset.sp, th = $('[data-spthumb="' + i + '"]');
+    th.innerHTML = thumbHTML(state.sponsors[i]); th.classList.toggle('empty', !state.sponsors[i]);
+  });
+
+  // Pengaturan bracket
+  $('#selSize').addEventListener('change', e => { if (!restructure(() => { state.sizeMode = e.target.value; })) renderSettings(); });
+  $('#selSeed').addEventListener('change', e => { if (!restructure(() => { state.seedMode = e.target.value; })) renderSettings(); });
+  $('#selPts').addEventListener('change', e => { if (!restructure(() => { state.pointsTarget = +e.target.value; })) renderSettings(); });
+  $('#selBo').addEventListener('change', e => { if (!restructure(() => { state.bestOf = +e.target.value; })) renderSettings(); });
+
+  // Data
+  $('#btnDemo').onclick = () => {
+    if (!confirm('Ganti seluruh data dengan data contoh (16 tim)?')) return;
+    state = defaultState(); adminRound = -1; save(); renderAdmin(); toast('Data contoh dimuat');
+  };
+  $('#btnResetScores').onclick = () => {
+    if (!confirm('Reset semua skor pertandingan? Daftar tim tetap ada.')) return;
+    state.matches = {}; adminRound = -1; save(); renderManager(); toast('Skor direset');
+  };
+  $('#btnWipe').onclick = () => {
+    if (!confirm('Hapus SEMUA data (tim, skor, logo, sponsor)? Tindakan ini tidak bisa dibatalkan.')) return;
+    state = emptyState(); adminRound = -1; save(); renderAdmin(); toast('Semua data dihapus');
+  };
+
+  // Tim
+  const addOne = () => {
+    const a = $('#p1').value.trim(), b = $('#p2').value.trim();
+    if (!a || !b) { toast('Isi nama kedua pemain', 'err'); return; }
+    if (addTeams([a + ' / ' + b])) { $('#p1').value = ''; $('#p2').value = ''; $('#p1').focus(); toast('Tim didaftarkan'); }
+  };
+  $('#btnAddTeam').onclick = addOne;
+  ['#p1', '#p2'].forEach(s => $(s).addEventListener('keydown', e => { if (e.key === 'Enter') addOne(); }));
+  $('#btnBulk').onclick = () => {
+    const names = $('#bulk').value.split('\n').map(x => x.trim()).filter(Boolean);
+    if (!names.length) { toast('Daftar masih kosong', 'err'); return; }
+    const n = addTeams(names); if (n) { $('#bulk').value = ''; toast(n + ' tim ditambahkan'); }
+  };
+  $('#btnShuffle').onclick = () => {
+    if (state.teams.length < 2) return;
+    restructure(() => {
+      for (let i = state.teams.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [state.teams[i], state.teams[j]] = [state.teams[j], state.teams[i]]; }
+    });
+    toast('Undian diacak');
+  };
+  $('#teamList').addEventListener('input', e => {
+    if (e.target.dataset.act !== 'rename') return;
+    state.teams[+e.target.dataset.idx] = e.target.value; save();    // ganti nama tidak mereset skor
+  });
+  $('#teamList').addEventListener('change', e => {
+    if (e.target.dataset.act !== 'rename') return;
+    const i = +e.target.dataset.idx;
+    if (!e.target.value.trim()) { state.teams[i] = 'Tim ' + (i + 1); e.target.value = state.teams[i]; save(); }
+  });
+  $('#teamList').addEventListener('click', e => {
+    const b = e.target.closest('button[data-act]'); if (!b) return;
+    const i = +b.dataset.idx, a = b.dataset.act;
+    if (a === 'del') restructure(() => { state.teams.splice(i, 1); });
+    if (a === 'up' && i > 0) restructure(() => { [state.teams[i - 1], state.teams[i]] = [state.teams[i], state.teams[i - 1]]; });
+    if (a === 'down' && i < state.teams.length - 1) restructure(() => { [state.teams[i + 1], state.teams[i]] = [state.teams[i], state.teams[i + 1]]; });
+  });
+
+  // Bracket manager
+  $('#chkAuto').addEventListener('change', e => { state.autoAdvance = e.target.checked; save(); });
+  $('#roundTabs').addEventListener('click', e => {
+    const b = e.target.closest('[data-r]'); if (!b) return;
+    adminRound = +b.dataset.r; const B = computeBracket(state); renderMgrChrome(B); renderMatchGrid(B);
+  });
+  $('#tvCtl').addEventListener('click', e => {
+    const b = e.target.closest('[data-tvfocus]'); if (!b) return;
+    const id = b.dataset.tvfocus === 'full' ? 'full' : +b.dataset.tvfocus;
+    tvCtlFocus = id;
+    try { localStorage.setItem(FOCUS_KEY, JSON.stringify({ f: id, t: Date.now() })); } catch (err) {}
+    renderMgrChrome(computeBracket(state));
+  });
+  const grid = $('#matchGrid');
+  grid.addEventListener('input', e => {                     // ketik skor: update state + status kartu
+    const t = e.target; if (t.dataset.act !== 'score') return;
+    const r = +t.dataset.r, i = +t.dataset.i;
+    setGame(r, i, +t.dataset.g, +t.dataset.side, t.value);
+    updateCardStatus(t.closest('[data-card]'), r, i);
+  });
+  grid.addEventListener('change', e => {                    // selesai ketik: simpan (+ majukan otomatis jika skor sah & pemenang sudah pasti)
+    const t = e.target; if (t.dataset.act !== 'score') return;
+    const r = +t.dataset.r, i = +t.dataset.i;
+    save();
+    const m = computeBracket(state).rounds[r][i];
+    if (state.autoAdvance && m.kind === 'ready' && m.res.complete) doAdvance(r, i);
+  });
+  grid.addEventListener('click', e => {
+    const b = e.target.closest('button[data-act]'); if (!b) return;
+    const card = b.closest('[data-card]'), [r, i] = card.dataset.card.split('-').map(Number);
+    if (b.dataset.act === 'advance') doAdvance(r, i);
+    if (b.dataset.act === 'undo') {
+      const R = Math.log2(bracketSize(state));
+      if (downstreamTouched(r, i, R) && !confirm('Mengubah hasil ini akan mereset pertandingan berikutnya yang bergantung padanya. Lanjutkan?')) return;
+      setDone(r, i, false); save(); refreshCard(r, i);
+    }
+  });
+}
+
+/* =====================================================================
+   5. TV DISPLAY – RENDER BRACKET
+   ===================================================================== */
+const stage = $('#stage'), viewport = $('#viewport'), bar = $('#bar');
+let focus = 'full', curB = null;
+
+// Sel skor per game untuk satu tim (side 0 = tim A, 1 = tim B); game yang tidak dimainkan dikosongkan
+function tvCells(m, side) {
+  let h = '';
+  for (let k = 0; k < state.bestOf; k++) {
+    const g = m.g[k], on = m.kind === 'done' && g && g[0] != null && g[1] != null;
+    if (!on) { h += '<span class="gs ghost">0</span>'; continue; }
+    h += '<span class="gs ' + (g[side] > g[1 - side] ? 'w' : '') + '">' + g[side] + '</span>';
+  }
+  return h;
+}
+function tvTeamRow(t, cells, cls) {
+  if (t.type === 'team') {
+    const parts = splitName(t.name).map(p => '<span>' + esc(p) + '</span>').join('');
+    return '<div class="trow ' + cls + '"><span class="seed">' + t.seed + '</span><span class="tname" title="' + esc(t.name) + '">' + parts + '</span>' + cells + '</div>';
+  }
+  return '<div class="trow"><span class="seed"></span><span class="tname ' + t.type + '"><span>' + (t.type === 'bye' ? 'BYE' : 'Menunggu pemenang') + '</span></span>' + cells + '</div>';
+}
+function tvCard(m, side, B) {
+  let ca = '', cb = '';
+  if (m.kind === 'done') { const aw = m.winner.seed === m.a.seed; ca = aw ? 'win' : 'lose'; cb = aw ? 'lose' : 'win'; }
+  else if (m.kind === 'bye') { ca = m.a.type === 'team' ? 'adv' : ''; cb = m.b.type === 'team' ? 'adv' : ''; }
+  return '<div class="mcard ' + m.kind + (m.r === B.R - 1 ? ' final' : '') + '" data-r="' + m.r + '" data-i="' + m.i + '" data-round="' + m.r + '" data-side="' + side + '">' +
+    tvTeamRow(m.a, tvCells(m, 0), ca) + tvTeamRow(m.b, tvCells(m, 1), cb) + '</div>';
+}
+
+function renderTV() {
+  const B = curB = computeBracket(state);
+  if (focus !== 'full' && focus >= B.R) focus = 'full';
+  renderHeader(B); buildStage(B); buildBar(B); updateHud();
+  $('#emptyMsg').classList.toggle('is-hidden', B.N > 0);
+  requestAnimationFrame(() => { drawLines(B); applyFocus(false); });
+}
+
+function renderHeader(B) {
+  const lw = $('#logoWrap');
+  const fallback = '<div class="brand">' + LOGO_SVG + '<span>PDM CUP 2026</span></div>';
+  lw.innerHTML = state.eventLogo ? '<img src="' + esc(state.eventLogo) + '" alt="PDM Cup 2026">' : fallback;
+  const im = $('img', lw); if (im) im.addEventListener('error', () => { lw.innerHTML = fallback; });
+  const sp = state.sponsors.filter(Boolean);
+  $('#sponsorStrip').innerHTML = sp.map(u => '<div class="sp"><img src="' + esc(u) + '" alt="Sponsor"></div>').join('');
+  $$('#sponsorStrip img').forEach(i => i.addEventListener('error', () => i.parentElement.remove()));
+  $('#hdStats').textContent = countDone(B) + ' / ' + Math.max(B.N - 1, 0) + ' laga selesai';
+}
+
+/* Susun kolom: kiri (babak awal -> semifinal) | tengah (Final) | kanan (semifinal -> babak awal) */
+function buildStage(B) {
+  const { R, size, rounds } = B;
+  const bodyH = Math.max(560, (size / 4) * 82);
+  stage.style.setProperty('--bodyh', bodyH + 'px');
+  const col = (r, side, ms) =>
+    '<div class="col" data-round="' + r + '" data-side="' + side + '"><div class="col-title" data-round="' + r + '">' + ROUND_FULL[size >> r] + '</div>' +
+    '<div class="col-body">' + ms.map(m => '<div class="slot">' + tvCard(m, side, B) + '</div>').join('') + '</div></div>';
+  let html = '<svg id="lines"></svg>';
+  for (let r = 0; r < R - 1; r++) html += col(r, 'L', rounds[r].slice(0, rounds[r].length / 2));
+  const fm = rounds[R - 1][0];
+  html += '<div class="col center" data-round="' + (R - 1) + '"><div class="col-title" data-round="' + (R - 1) + '">Final</div>' +
+    '<div class="col-body"><div class="slot final-slot">' +
+      '<div class="champ ' + (B.champ ? 'has' : '') + '" data-round="' + (R - 1) + '"><div class="trophy">🏆</div><div class="cl">JUARA</div><div class="cn">' + (B.champ ? esc(B.champ.name) : '—') + '</div></div>' +
+      tvCard(fm, 'C', B) + '</div></div></div>';
+  for (let r = R - 2; r >= 0; r--) html += col(r, 'R', rounds[r].slice(rounds[r].length / 2));
+  stage.innerHTML = html;
+}
+
+// Posisi elemen relatif terhadap stage (berjalan naik lewat offsetParent)
+function rectIn(el) {
+  let x = 0, y = 0, n = el;
+  while (n && n !== stage) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; }
+  return { x, y, w: el.offsetWidth, h: el.offsetHeight };
+}
+// Konektor siku antar match; jalur pemenang (sudah maju) dinyalakan neon
+function drawLines(B) {
+  const svg = $('#lines'); if (!svg) return;
+  const W = stage.offsetWidth, H = stage.offsetHeight;
+  svg.setAttribute('width', W); svg.setAttribute('height', H); svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+  const cards = {}; $$('.mcard', stage).forEach(c => { cards[c.dataset.r + '-' + c.dataset.i] = c; });
+  const base = [], on = [];
+  for (let r = 0; r < B.R - 1; r++) B.rounds[r].forEach(m => {
+    if (m.kind === 'void') return;
+    const c = cards[r + '-' + m.i], p = cards[(r + 1) + '-' + (m.i >> 1)];
+    if (!c || !p || p.classList.contains('void')) return;
+    const a = rectIn(c), b = rectIn(p), left = c.dataset.side === 'L';
+    const x1 = left ? a.x + a.w : a.x, x2 = left ? b.x : b.x + b.w;
+    const y1 = a.y + a.h / 2, y2 = b.y + b.h / 2, xm = (x1 + x2) / 2;
+    const lit = m.winner.type === 'team' && (m.kind === 'done' || m.kind === 'bye');
+    (lit ? on : base).push('<path class="' + (lit ? 'on' : '') + '" data-r="' + r + '" d="M' + x1 + ' ' + y1 + 'H' + xm + 'V' + y2 + 'H' + x2 + '"/>');
+  });
+  svg.innerHTML = base.join('') + on.join('');
+}
+
+/* =====================================================================
+   6. ZOOM / FOCUS LOGIC
+   ===================================================================== */
+// Menghitung translate + scale agar area target (satu babak) memenuhi layar, lalu meredupkan babak lain
+function applyFocus(animate) {
+  if (!curB || !stage.firstChild) return;
+  const vw = viewport.clientWidth, vh = viewport.clientHeight;
+  const padX = 16, padT = 14, padB = 92;          // padB: ruang untuk Floating Action Bar
+  const aw = vw - padX * 2, ah = vh - padT - padB;
+  const W = stage.offsetWidth, H = stage.offsetHeight;
+  let box = { x: 0, y: 0, w: W, h: H }, maxS = 1.25;
+  if (focus !== 'full') {
+    const els = $$('.mcard[data-round="' + focus + '"]:not(.void), .champ[data-round="' + focus + '"]', stage);
+    if (els.length) {
+      let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+      els.forEach(el => { const r = rectIn(el); x0 = Math.min(x0, r.x); y0 = Math.min(y0, r.y); x1 = Math.max(x1, r.x + r.w); y1 = Math.max(y1, r.y + r.h); });
+      const pad = 36; box = { x: x0 - pad, y: y0 - pad, w: x1 - x0 + pad * 2, h: y1 - y0 + pad * 2 }; maxS = 1.7;
+    }
+  }
+  const s = Math.max(0.05, Math.min(aw / box.w, ah / box.h, maxS));
+  const tx = padX + (aw - box.w * s) / 2 - box.x * s;
+  const ty = padT + (ah - box.h * s) / 2 - box.y * s;
+  if (!animate) stage.classList.add('no-anim');
+  stage.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + s + ')';
+  if (!animate) { void stage.offsetWidth; stage.classList.remove('no-anim'); }
+
+  // Redupkan elemen di babak lain
+  $$('.mcard, .col-title, .champ', stage).forEach(el => el.classList.toggle('dim', focus !== 'full' && +el.dataset.round !== focus));
+  $$('#lines path', stage).forEach(p => { const r = +p.dataset.r; p.classList.toggle('dim', focus !== 'full' && !(r === focus || r + 1 === focus)); });
+}
+function updateHud() {
+  const h = $('#hud');
+  if (focus !== 'full' && curB) $('b', h).textContent = ROUND_FULL[curB.size >> focus];
+  h.classList.toggle('show', focus !== 'full');
+}
+function updateBar() { $$('#bar [data-focus]').forEach(b => b.classList.toggle('active', b.dataset.focus === String(focus))); }
+function focusOn(id, user) {
+  if (user !== false) stopTour();
+  focus = id; updateBar(); updateHud(); applyFocus(true);
+}
+
+/* ---- Floating Action Bar ---- */
+let tourOn = false, tourTimer = null;
+function buildBar(B) {
+  const btn = id => '<button class="fbtn ' + (String(focus) === String(id) ? 'active' : '') + '" data-focus="' + id + '">' + focusLabel(B, id) + '</button>';
+  bar.innerHTML = focusIdsFor(B).map(btn).join('') +
+    '<span class="sep"></span>' +
+    '<button class="fbtn util ' + (tourOn ? 'active' : '') + '" data-act="tour" title="Tour otomatis (T)">' + (tourOn ? '⏸ Tour' : '▶ Tour') + '</button>' +
+    '<button class="fbtn util" data-act="fs" title="Layar penuh (F)">⛶</button>' +
+    '<button class="fbtn util" data-act="admin" title="Kembali ke Admin">✎ Admin</button>';
+}
+function toggleTour() {
+  tourOn ? stopTour() : startTour();
+  if (curB) buildBar(curB);
+}
+function startTour() {
+  tourOn = true; clearInterval(tourTimer);
+  tourTimer = setInterval(() => {
+    if (!curB) return;
+    const ids = focusIdsFor(curB), cur = ids.findIndex(x => String(x) === String(focus));
+    focusOn(ids[(cur + 1) % ids.length], false);
+  }, 7000);
+}
+function stopTour() {
+  if (!tourOn) return;
+  tourOn = false; clearInterval(tourTimer);
+  if (curB && mode === 'tv') buildBar(curB);
+}
+function toggleFs() {
+  if (document.fullscreenElement) document.exitFullscreen();
+  else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+}
+let idleT;
+function wake() {                                  // bar memudar & kursor hilang saat tidak ada aktivitas
+  bar.classList.remove('idle'); document.body.classList.remove('cursor-hide');
+  clearTimeout(idleT);
+  idleT = setTimeout(() => { if (mode === 'tv') { bar.classList.add('idle'); document.body.classList.add('cursor-hide'); } }, 5000);
+}
+function bindTV() {
+  bar.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return; wake();
+    if (b.dataset.focus !== undefined) { focusOn(b.dataset.focus === 'full' ? 'full' : +b.dataset.focus); return; }
+    if (b.dataset.act === 'tour') toggleTour();
+    else if (b.dataset.act === 'fs') toggleFs();
+    else if (b.dataset.act === 'admin') setMode('admin');
+  });
+  ['mousemove', 'touchstart', 'click'].forEach(ev => document.addEventListener(ev, () => { if (mode === 'tv') wake(); }, { passive: true }));
+  document.addEventListener('keydown', e => {      // pintasan remote/keyboard: ←/→, angka 1..n, T, F
+    if (mode !== 'tv' || !curB) return; wake();
+    const ids = focusIdsFor(curB), cur = ids.findIndex(x => String(x) === String(focus));
+    if (e.key === 'ArrowRight') focusOn(ids[Math.min(ids.length - 1, cur + 1)]);
+    else if (e.key === 'ArrowLeft') focusOn(ids[Math.max(0, cur - 1)]);
+    else if (/^[1-9]$/.test(e.key) && ids[+e.key - 1] !== undefined) focusOn(ids[+e.key - 1]);
+    else if (e.key === 't' || e.key === 'T') toggleTour();
+    else if (e.key === 'f' || e.key === 'F') toggleFs();
+  });
+  if ('ResizeObserver' in window) new ResizeObserver(() => { if (mode === 'tv') applyFocus(false); }).observe(viewport);
+  setInterval(() => { const c = $('#clock'); if (c) c.textContent = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }); }, 1000);
+}
+
+/* =====================================================================
+   7. SINKRONISASI REAL-TIME & ROUTING MODE
+   ===================================================================== */
+function applyRemoteFocus() {
+  let raw = null; try { raw = localStorage.getItem(FOCUS_KEY); } catch (e) {}
+  if (raw === lastFocusRaw) return;
+  lastFocusRaw = raw;
+  try {
+    const f = JSON.parse(raw).f;
+    if (mode === 'tv' && (f === 'full' || (Number.isInteger(f) && curB && f < curB.R))) { stopTour(); focusOn(f, false); }
+  } catch (e) {}
+}
+// Dipanggil saat tab lain (Admin) mengubah data
+function reloadExternal() {
+  let raw = null; try { raw = localStorage.getItem(KEY); } catch (e) {}
+  if (!raw || raw === lastRaw) return;
+  try { state = normalize(JSON.parse(raw)); lastRaw = raw; } catch (e) { return; }
+  if (mode === 'tv') renderTV();
+  else if (!/INPUT|TEXTAREA|SELECT/.test((document.activeElement || {}).tagName || '')) renderAdmin();
+}
+window.addEventListener('storage', e => {
+  if (e.key === KEY) reloadExternal();
+  else if (e.key === FOCUS_KEY) applyRemoteFocus();
+});
+// Cadangan: polling ringan untuk TV (jika event storage tidak terkirim, mis. file://)
+setInterval(() => { if (mode === 'tv') { reloadExternal(); applyRemoteFocus(); } }, 1500);
+
+function setMode(m) { if (location.hash === '#' + m) applyMode(); else location.hash = m; }
+/* ---- Password admin ---- */
+async function sha256(txt) {
+  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('pdmcup2026|' + txt));
+  return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
+}
+function currentHash() { try { return localStorage.getItem(PW_KEY) || ADMIN_HASH; } catch (e) { return ADMIN_HASH; } }
+function isAuthed() { try { return sessionStorage.getItem(AUTH_KEY) === '1'; } catch (e) { return false; } }
+function bindAuth() {
+  $('#loginForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = $('#loginMsg');
+    if (!(window.crypto && crypto.subtle)) { msg.textContent = 'Browser tidak mendukung. Buka lewat https (mis. GitHub Pages).'; return; }
+    const h = await sha256($('#loginPw').value);
+    if (h === currentHash()) {
+      try { sessionStorage.setItem(AUTH_KEY, '1'); } catch (err) {}
+      $('#loginPw').value = ''; msg.textContent = ''; applyMode();
+    } else { msg.textContent = 'Password salah.'; $('#loginPw').select(); }
+  });
+  $('#btnLoginTv').onclick = () => setMode('tv');
+  $('#btnLock').onclick = () => { try { sessionStorage.removeItem(AUTH_KEY); } catch (e) {} applyMode(); };
+  $('#btnSetPw').onclick = async () => {
+    const a = $('#pwNew').value, b = $('#pwNew2').value;
+    if (a.length < 6) { toast('Password minimal 6 karakter', 'err'); return; }
+    if (a !== b) { toast('Konfirmasi password tidak sama', 'err'); return; }
+    if (!(window.crypto && crypto.subtle)) { toast('Browser tidak mendukung (buka lewat https)', 'err'); return; }
+    const h = await sha256(a);
+    try { localStorage.setItem(PW_KEY, h); } catch (e) { toast('Gagal menyimpan password', 'err'); return; }
+    $('#pwNew').value = ''; $('#pwNew2').value = '';
+    const box = $('#pwHash'); box.classList.remove('is-hidden');
+    box.innerHTML = 'Password diganti untuk browser ini. Hash untuk <b>ADMIN_HASH</b> (agar permanen di semua perangkat):<br><span class="text-neon">' + h + '</span>';
+    toast('Password diperbarui');
+  };
+  $('#btnResetPw').onclick = () => {
+    try { localStorage.removeItem(PW_KEY); } catch (e) {}
+    $('#pwHash').classList.add('is-hidden'); toast('Password dikembalikan ke bawaan');
+  };
+}
+
+function applyMode() {
+  mode = location.hash === '#tv' ? 'tv' : 'admin';
+  const locked = mode === 'admin' && !isAuthed();
+  $('#adminRoot').classList.toggle('is-hidden', mode === 'tv' || locked);
+  $('#tvRoot').classList.toggle('is-hidden', mode !== 'tv');
+  $('#loginRoot').classList.toggle('is-hidden', !locked);
+  document.body.classList.toggle('tv', mode === 'tv');
+  document.title = mode === 'tv' ? 'PDM Cup 2026 – TV' : 'PDM Cup 2026 – Admin';
+  if (mode === 'tv') { reloadExternal(); renderTV(); wake(); }
+  else if (locked) { stopTour(); setTimeout(() => $('#loginPw').focus(), 50); }
+  else { stopTour(); renderAdmin(); window.scrollTo(0, 0); }
+}
+window.addEventListener('hashchange', applyMode);
+
+/* =====================================================================
+   INIT
+   ===================================================================== */
+state = loadState();
+$('#adminLogoIcon').innerHTML = LOGO_SVG.replace('width="42" height="42"', 'width="26" height="26"');
+bindAdmin(); bindTV(); bindAuth();
+$('#loginIcon').innerHTML = LOGO_SVG;
+try { lastFocusRaw = localStorage.getItem(FOCUS_KEY); } catch (e) {}
+applyMode();
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (mode === 'tv' && curB) { drawLines(curB); applyFocus(false); } });
+})();
+</script>
+</body>
+</html>
