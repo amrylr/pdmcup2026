@@ -1051,7 +1051,7 @@ function bindTV() {
    ===================================================================== */
 function setMode(m) { if (location.hash === '#' + m) applyMode(); else location.hash = m; }
 async function sha256(txt) {
-  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('pdmcup2026|' + txt));
+  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('180699|' + txt));
   return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
 }
 function currentHash() { try { return localStorage.getItem(PW_KEY) || ADMIN_HASH; } catch (e) { return ADMIN_HASH; } }
