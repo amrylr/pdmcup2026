@@ -231,7 +231,6 @@
      ===================================================================== -->
 <div id="adminRoot">
   <header class="sticky top-0 z-40 border-b border-white/10 bg-ink/85 backdrop-blur">
-    <!-- Header Disesuaikan untuk Mobile (flex-col sm:flex-row) -->
     <div class="mx-auto flex max-w-7xl flex-col sm:flex-row sm:flex-wrap items-center justify-between gap-x-6 gap-y-4 px-4 py-3">
       <div class="flex items-center gap-3 w-full sm:w-auto justify-center sm:justify-start">
         <div class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-neon/15 ring-1 ring-neon/40" id="adminLogoIcon"></div>
@@ -241,7 +240,6 @@
         </div>
       </div>
       
-      <!-- Nav Tabs dgn Scroll Horizontal di Mobile -->
       <nav id="tabs" class="flex w-full sm:w-auto overflow-x-auto scrollbar-hide gap-1 rounded-full bg-white/5 p-1 justify-start sm:justify-center">
         <button class="tab" data-tab="setup">Pengaturan</button>
         <button class="tab" data-tab="teams">Tim</button>
@@ -383,9 +381,7 @@
         </div>
         <p class="mt-2 text-xs text-slate-400">Isi skor asli tiap game (G1, G2, G3). Data otomatis tersimpan saat berpindah input.</p>
         
-        <!-- Tab manager dgn scroll di mobile -->
         <div id="roundTabs" class="mt-4 flex sm:flex-wrap overflow-x-auto scrollbar-hide gap-2 pb-1"></div>
-        
         <div id="matchGrid" class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3"></div>
       </div>
     </section>
@@ -441,7 +437,8 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzwYha1cIwjXEkyD9LuP_8F
 
 const KEY = 'pdmcup2026_state_v2';          
 const MAX_TEAMS = 64;
-const ADMIN_HASH = 'abd74a4a77e9b4e97b509a055483ec6354ad8be4286161c3fe6d68826d5614a4';
+// HASH UNTUK PASSWORD DEFAULTS: 180699
+const ADMIN_HASH = '0fb0a6d304ea3b33244b6a5c9b90bda4741f1fb33877c56366081144eb381866';
 const PW_KEY = 'pdmcup2026_pw_v1', AUTH_KEY = 'pdmcup2026_auth_v1';
 const BYE = { type: 'bye' }, TBD = { type: 'tbd' };
 const ROUND_FULL  = { 64:'Babak 64 Besar', 32:'Babak 32 Besar', 16:'Babak 16 Besar', 8:'Perempat Final', 4:'Semi Final', 2:'Final' };
@@ -670,7 +667,6 @@ function restructure(fn) {
 function renderTeams() {
   $('#teamCount').textContent = state.teams.length + ' / ' + MAX_TEAMS;
   const L = state.teams.length;
-  // Menambahkan class min-w-0 pada input agar bisa mengecil dengan baik di HP
   $('#teamList').innerHTML = L ? state.teams.map((n, i) =>
     '<li class="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[.03] p-2">' +
       '<span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-neon/15 text-xs font-bold text-neon">' + (i + 1) + '</span>' +
@@ -703,7 +699,6 @@ function renderManager() {
 function renderMgrChrome(B) {
   const done = countDone(B), total = Math.max(B.N - 1, 0), pct = total ? Math.round(done / total * 100) : 0;
   
-  // Format rata tengah untuk HP, kiri/kanan untuk desktop
   $('#mgrSummary').innerHTML =
     '<div class="flex flex-wrap items-end gap-x-10 gap-y-4 justify-center sm:justify-start text-center sm:text-left">' +
       '<div><div class="label">Pertandingan Selesai</div><div class="font-display text-5xl leading-none">' + done + '<span class="text-slate-500"> / ' + total + '</span></div></div>' +
@@ -996,7 +991,7 @@ function updateBar() { $$('#bar [data-focus]').forEach(b => b.classList.toggle('
 function focusOn(id, user) {
   if (user !== false) stopTour();
   state.tvFocus = id; updateBar(); updateHud(); applyFocus(true);
-  if(user !== false && mode === 'tv') save(); // Kirim ke server jika diklik dari TV
+  if(user !== false && mode === 'tv') save(); 
 }
 
 let tourOn = false, tourTimer = null;
@@ -1103,7 +1098,7 @@ try {
   if (rawServerData) {
     lastRaw = rawServerData;
     state = normalize(JSON.parse(rawServerData));
-    localStorage.setItem(KEY, rawServerData); // Sinkronkan ke lokal
+    localStorage.setItem(KEY, rawServerData);
   } else {
     // Coba lokal jika server kosong / gagal
     const rawLocal = localStorage.getItem(KEY);
@@ -1114,7 +1109,7 @@ try {
   state = defaultState();
 }
 
-$('#loadingScreen').classList.add('hide'); // Matikan animasi loading
+$('#loadingScreen').classList.add('hide');
 bindAdmin(); bindTV(); bindAuth();
 applyMode();
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (mode === 'tv' && curB) { drawLines(curB); applyFocus(false); } });
