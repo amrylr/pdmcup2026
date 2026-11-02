@@ -275,9 +275,20 @@ function renderUI() {
 function renderHeader(B) {
   const lw = $('#logoWrap');
   const validLogos = (state.eventLogos || []).filter(Boolean);
+  
+  let headerHtml = '';
+  
   if (validLogos.length > 0) {
-    lw.innerHTML = validLogos.map(u => '<img src="' + esc(u) + '">').join('');
+    // Jika admin memasukkan logo: Tampilkan logo + Teks PDM CUP 2026
+    headerHtml += validLogos.map(u => '<img src="' + esc(u) + '">').join('');
+    headerHtml += '<div class="brand"><span>PDM CUP 2026</span></div>';
+  } else {
+    // Jika kosong: Tampilkan SVG bawaan + Teks PDM CUP 2026
+    headerHtml += '<div class="brand"><svg width="28" height="28" viewBox="0 0 64 64" fill="none" stroke="#3dff7a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><circle cx="46" cy="46" r="9" fill="#3dff7a"/><path d="M40 40 L12 20"/><path d="M40 40 L20 12"/><path d="M40 40 L27 8"/><path d="M40 40 L8 28"/></svg><span>PDM CUP 2026</span></div>';
   }
+  
+  lw.innerHTML = headerHtml;
+
   const sp = (state.sponsors || []).filter(Boolean);
   $('#sponsorStrip').innerHTML = sp.map(u => '<div class="sp"><img src="' + esc(u) + '"></div>').join('');
 }
