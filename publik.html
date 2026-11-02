@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PDM Cup 2026 – Bracket Peserta</title>
+
+<!-- Font -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@500;600;700&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  window.tailwind = window.tailwind || {};
+  tailwind.config = {
+    theme: { extend: {
+      colors: { ink:'#070b14', panel:'#0e1525', neon:'#3dff7a', gold:'#ffc83d' },
+      fontFamily: { display:['"Bebas Neue"','sans-serif'], cond:['"Barlow Condensed"','sans-serif'], sans:['Montserrat','sans-serif'] }
+    } }
+  };
+</script>
+
+<style>
+  /* ================= VARIABEL & BASE ================= */
+  :root{
+    --ink:#070b14; --neon:#3dff7a; --gold:#ffc83d;
+    --cw:240px;        /* Lebar kartu dioptimalkan untuk mobile */
+    --rowh:34px;       /* Tinggi baris tim sedikit dikecilkan */
+    --colgap:40px;     /* Jarak antar babak */
+  }
+  html,body{margin:0;background:var(--ink);color:#e6edf7;font-family:Montserrat,sans-serif;height:100%;overflow:hidden;}
+  body{
+    background: radial-gradient(800px 500px at 50% 0%, rgba(61,255,122,.08), transparent 70%), #070b14;
+  }
+  
+  /* Sembunyikan scrollbar tapi tetap bisa di-scroll */
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* ================= HEADER ================= */
+  #header {
+    position: relative; z-index: 50; display: flex; flex-direction: column; align-items: center; 
+    padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,.07); 
+    background: rgba(7, 11, 20, 0.9); backdrop-filter: blur(10px);
+  }
+  #logoWrap { display: flex; align-items: center; justify-content: center; gap: 12px; height: 38px; }
+  #logoWrap img { height: 100%; object-fit: contain; }
+  .brand { font: 400 36px/1 'Bebas Neue',sans-serif; letter-spacing: .1em; display: flex; align-items: center; gap: 8px; }
+  .brand span { background: linear-gradient(180deg,#fff 10%,var(--gold) 95%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .live-badge { 
+    display: inline-flex; align-items: center; gap: 6px; font: 700 10px Montserrat; 
+    color: #ff7b7b; letter-spacing: .1em; text-transform: uppercase; margin-top: 6px; 
+    background: rgba(255,0,0,0.1); padding: 4px 10px; border-radius: 99px; border: 1px solid rgba(255,0,0,0.2);
+  }
+  .live-badge i { width: 6px; height: 6px; border-radius: 50%; background: #ff4d4d; box-shadow: 0 0 8px #ff4d4d; animation: pulse 1.6s infinite; }
+  @keyframes pulse{50%{opacity:.3}}
+  #sponsorStrip { display: flex; gap: 8px; align-items: center; justify-content: center; margin-top: 8px; flex-wrap: wrap; }
+  .sp { height: 20px; padding: 0 8px; border-radius: 4px; background: rgba(255,255,255,.93); display: flex; align-items: center; }
+  .sp img { height: 14px; max-width: 80px; object-fit: contain; }
+
+  /* ================= BRACKET STAGE (MOBILE SCROLL) ================= */
+  #viewport { position: relative; flex: 1; overflow: auto; width: 100%; -webkit-overflow-scrolling: touch; cursor: grab; }
+  #viewport:active { cursor: grabbing; }
+  
+  #stage { 
+    position: relative; display: flex; gap: var(--colgap); padding: 30px 40px; 
+    min-width: max-content; min-height: 100%; align-items: center;
+  }
+  
+  #lines { position: absolute; left: 0; top: 0; pointer-events: none; z-index: 0; }
+  #lines path { fill: none; stroke: rgba(148,163,184,.25); stroke-width: 2; stroke-linejoin: round; transition: stroke .5s; }
+  #lines path.on { stroke: var(--neon); filter: drop-shadow(0 0 4px rgba(61,255,122,.7)); }
+
+  .col { display: flex; flex-direction: column; width: var(--cw); z-index: 10; }
+  .col-title { 
+    height: 40px; display: flex; align-items: center; justify-content: center; 
+    font: 400 22px 'Bebas Neue',sans-serif; letter-spacing: .1em; color: var(--neon); text-align: center; 
+  }
+  .col.center .col-title { color: var(--gold); }
+  .col-body { display: flex; flex-direction: column; height: var(--bodyh); }
+  .slot { flex: 1; display: flex; align-items: center; justify-content: center; }
+  .final-slot { position: relative; }
+
+  /* Card UI (Mobile Tweaks) */
+  .mcard { 
+    position: relative; width: var(--cw); border-radius: 10px; overflow: hidden; 
+    background: linear-gradient(180deg,#131c32,#0d1424); border: 1px solid rgba(148,163,184,.22); 
+    box-shadow: 0 4px 12px rgba(0,0,0,.4); 
+  }
+  .mcard.ready { border-color: rgba(255,200,61,.7); box-shadow: 0 0 0 1px rgba(255,200,61,.25); }
+  .mcard.final { border-color: rgba(255,200,61,.6); }
+  .mcard.void { visibility: hidden; }
+
+  .trow { position: relative; height: var(--rowh); display: flex; align-items: center; gap: 6px; padding: 0 6px 0 0; }
+  .trow + .trow { border-top: 1px solid rgba(148,163,184,.14); }
+  .seed { width: 22px; flex: 0 0 22px; text-align: center; font: 600 11px 'Barlow Condensed',sans-serif; color: #7f8ca3; }
+  .tname { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; font: 600 14px/1.05 'Barlow Condensed',sans-serif; color: #dbe4f3; }
+  .tname span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tname.bye, .tname.tbd { color: #5d6b84; font-style: italic; font-weight: 500; }
+  .gs { width: 20px; flex: 0 0 20px; text-align: center; font: 600 15px 'Barlow Condensed',sans-serif; color: #8d9bb3; }
+  .gs.w { color: var(--neon); font-weight: 700; }
+  .gs.ghost { visibility: hidden; }
+  
+  .trow.win .gs.w { color: #7dffa8; }
+  .trow.lose .gs { color: #7d8aa1; }
+  .trow.win { background: linear-gradient(90deg,rgba(61,255,122,.15),transparent 90%); }
+  .trow.win::before { content:''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--neon); }
+  .trow.win .tname { color: #fff; }
+  .trow.lose { opacity: .6; }
+  .trow.adv .tname { color: #b9f5cf; }
+
+  .champ { position: absolute; left: 50%; bottom: calc(50% + 45px); transform: translateX(-50%); width: 100%; text-align: center; }
+  .champ .trophy { font-size: 42px; line-height: 1; filter: grayscale(1) opacity(.35); }
+  .champ.has .trophy { filter: drop-shadow(0 0 14px rgba(255,200,61,.85)); }
+  .champ .cl { font: 400 16px 'Bebas Neue',sans-serif; letter-spacing: .2em; color: var(--gold); }
+  .champ .cn { font: 700 18px/1.1 'Barlow Condensed',sans-serif; color: #fff; text-shadow: 0 0 10px rgba(0,0,0,0.8); }
+
+  /* Instruksi Swipe */
+  #swipeHint {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: rgba(14,21,37,.85); border: 1px solid rgba(255,255,255,.1); padding: 8px 16px;
+    border-radius: 99px; font: 600 11px Montserrat; color: #8fa0bb; letter-spacing: .05em;
+    backdrop-filter: blur(8px); z-index: 100; pointer-events: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5); opacity: 1; transition: opacity 0.5s;
+  }
+  #swipeHint.fade { opacity: 0; }
+
+  /* Loading */
+  #loadingScreen { position: fixed; inset: 0; background: #070b14; z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; transition: opacity 0.5s; }
+  #loadingScreen.hide { opacity: 0; pointer-events: none; }
+  .spinner { width: 32px; height: 32px; border: 3px solid rgba(61,255,122,.2); border-top-color: var(--neon); border-radius: 50%; animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body class="flex flex-col">
+
+<div id="loadingScreen">
+  <div class="spinner"></div>
+  <div class="font-display text-xl tracking-wider text-neon">Memuat Bracket...</div>
+</div>
+
+<header id="header">
+  <div id="logoWrap">
+    <!-- SVG Bawaan jika tidak ada logo -->
+    <div class="brand">
+      <svg width="28" height="28" viewBox="0 0 64 64" fill="none" stroke="#3dff7a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><circle cx="46" cy="46" r="9" fill="#3dff7a"/><path d="M40 40 L12 20"/><path d="M40 40 L20 12"/><path d="M40 40 L27 8"/><path d="M40 40 L8 28"/></svg>
+      <span>PDM CUP 2026</span>
+    </div>
+  </div>
+  <div id="sponsorStrip"></div>
+  <div class="live-badge"><i></i> Live Update</div>
+</header>
+
+<main id="viewport" class="scrollbar-hide">
+  <div id="stage"></div>
+  <svg id="lines"></svg>
+</main>
+
+<div id="swipeHint">Geser layar untuk melihat bracket ➔</div>
+
+<script>
+// =====================================================================
+// KONFIGURASI API (Sama dengan versi Admin)
+// =====================================================================
+const API_URL = "https://script.google.com/macros/s/AKfycbzwYha1cIwjXEkyD9LuP_8Fx2PUFFr6IEioE2VicfwJRWY6J8A3ZLt372IHWWMb_mia/exec"; 
+
+(async function () {
+'use strict';
+
+const BYE = { type: 'bye' }, TBD = { type: 'tbd' };
+const ROUND_FULL  = { 64:'Babak 64 Besar', 32:'Babak 32 Besar', 16:'Babak 16 Besar', 8:'Perempat Final', 4:'Semi Final', 2:'Final' };
+let state = null, lastRaw = null, firstRender = true;
+
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function splitName(n) { const p = String(n).split(/\s*[\/&]\s*/).map(x => x.trim()).filter(Boolean); return p.length === 2 ? p : [String(n)]; }
+function nextPow2(n, min) { let p = min || 4; while (p < n) p *= 2; return p; }
+function bracketSize(s) { const need = Math.min(64, nextPow2(s.teams.length)); return s.sizeMode === 'auto' ? need : Math.min(64, Math.max(need, parseInt(s.sizeMode, 10) || need)); }
+function seedOrder(size) { let o = [1, 2]; for (let n = 4; n <= size; n *= 2) o = o.flatMap(x => [x, n + 1 - x]); return o; }
+
+function gameValid(a, b, T) {
+  if (!Number.isInteger(a) || !Number.isInteger(b) || a < 0 || b < 0 || a === b) return false;
+  const w = Math.max(a, b), l = Math.min(a, b), cap = T + 9;
+  if (w < T || w > cap) return false;
+  if (w === T) return l <= T - 2;
+  if (w < cap) return l === w - 2;
+  return l === cap - 1;
+}
+
+function evalMatch(g, s) {
+  const need = Math.floor(s.bestOf / 2) + 1;
+  let wa = 0, wb = 0, valid = true, gap = false;
+  for (let k = 0; k < s.bestOf; k++) {
+    const x = g && g[k], fa = x && x[0] != null, fb = x && x[1] != null;
+    if (!fa && !fb) { gap = true; continue; }
+    if (!fa || !fb || gap || wa >= need || wb >= need) { valid = false; continue; }
+    if (!gameValid(x[0], x[1], s.pointsTarget)) { valid = false; continue; }
+    if (x[0] > x[1]) wa++; else wb++;
+  }
+  const decided = wa >= need || wb >= need;
+  return { wa, wb, valid, decided, complete: valid && decided };
+}
+
+function computeBracket(s) {
+  const N = s.teams.length, size = bracketSize(s), R = Math.log2(size);
+  const order = s.seedMode === 'order' ? Array.from({ length: size }, (_, k) => k + 1) : seedOrder(size);
+  const slot = k => { const sd = order[k]; return sd <= N ? { type:'team', seed:sd, name:s.teams[sd - 1] } : BYE; };
+  const rounds = []; 
+  for (let r = 0; r < R; r++) {
+    const cnt = size >> (r + 1), arr = [];
+    for (let i = 0; i < cnt; i++) {
+      const a = r === 0 ? slot(2 * i) : rounds[r - 1][2 * i].winner;
+      const b = r === 0 ? slot(2 * i + 1) : rounds[r - 1][2 * i + 1].winner;
+      const d = s.matches[r + '-' + i] || {};
+      const res = evalMatch(d.g, s);
+      const m = { r, i, a, b, g: d.g || [], res, kind:'wait', winner:TBD };
+      if (a.type === 'bye' && b.type === 'bye') { m.kind = 'void'; m.winner = BYE; }
+      else if (a.type === 'bye' || b.type === 'bye') { m.kind = 'bye'; m.winner = a.type === 'bye' ? b : a; }
+      else if (a.type === 'team' && b.type === 'team') {
+        if (d.done && res.complete) { m.kind = 'done'; m.winner = res.wa > res.wb ? a : b; }
+        else m.kind = 'ready';
+      }
+      arr.push(m);
+    }
+    rounds.push(arr);
+  }
+  const w = rounds[R - 1][0].winner;
+  return { size, R, N, rounds, champ: w.type === 'team' ? w : null };
+}
+
+async function fetchServerState() {
+  if(!API_URL) return null;
+  try { const res = await fetch(API_URL); const json = await res.json(); return json.data; } catch(e) {} return null;
+}
+
+function renderUI() {
+  if (!state || !state.teams || state.teams.length === 0) {
+    $('#stage').innerHTML = '<div class="w-full text-center text-slate-400 mt-20">Belum ada tim terdaftar.</div>';
+    return;
+  }
+  
+  const B = computeBracket(state);
+  renderHeader(B);
+  buildStage(B);
+  requestAnimationFrame(() => drawLines(B));
+  
+  // Auto scroll ke kolom babak terbaru pada saat load pertama
+  if(firstRender) {
+    firstRender = false;
+    setTimeout(() => { scrollToActiveRound(B); }, 500);
+  }
+}
+
+function renderHeader(B) {
+  const lw = $('#logoWrap');
+  const validLogos = (state.eventLogos || []).filter(Boolean);
+  if (validLogos.length > 0) {
+    lw.innerHTML = validLogos.map(u => '<img src="' + esc(u) + '">').join('');
+  }
+  const sp = (state.sponsors || []).filter(Boolean);
+  $('#sponsorStrip').innerHTML = sp.map(u => '<div class="sp"><img src="' + esc(u) + '"></div>').join('');
+}
+
+function tvCells(m, side) {
+  let h = '';
+  for (let k = 0; k < state.bestOf; k++) {
+    const g = m.g[k], on = m.kind === 'done' && g && g[0] != null && g[1] != null;
+    if (!on) { h += '<span class="gs ghost">0</span>'; continue; }
+    h += '<span class="gs ' + (g[side] > g[1 - side] ? 'w' : '') + '">' + g[side] + '</span>';
+  }
+  return h;
+}
+
+function tvTeamRow(t, cells, cls) {
+  if (t.type === 'team') {
+    const parts = splitName(t.name).map(p => '<span>' + esc(p) + '</span>').join('');
+    return '<div class="trow ' + cls + '"><span class="seed">' + t.seed + '</span><span class="tname">' + parts + '</span>' + cells + '</div>';
+  }
+  return '<div class="trow"><span class="seed"></span><span class="tname ' + t.type + '"><span>' + (t.type === 'bye' ? 'BYE' : 'Menunggu pemenang') + '</span></span>' + cells + '</div>';
+}
+
+function tvCard(m, side, B) {
+  let ca = '', cb = '';
+  if (m.kind === 'done') { const aw = m.winner.seed === m.a.seed; ca = aw ? 'win' : 'lose'; cb = aw ? 'lose' : 'win'; }
+  else if (m.kind === 'bye') { ca = m.a.type === 'team' ? 'adv' : ''; cb = m.b.type === 'team' ? 'adv' : ''; }
+  return '<div class="mcard ' + m.kind + (m.r === B.R - 1 ? ' final' : '') + '" data-r="' + m.r + '" data-i="' + m.i + '">' +
+    tvTeamRow(m.a, tvCells(m, 0), ca) + tvTeamRow(m.b, tvCells(m, 1), cb) + '</div>';
+}
+
+function buildStage(B) {
+  const { R, size, rounds } = B;
+  
+  // Hitung tinggi stage berdasarkan jumlah match di babak pertama (R0)
+  const r0matches = size / 2;
+  const matchHeight = 74; // Tinggi mcard + sedikit jarak
+  const bodyH = Math.max(300, r0matches * matchHeight);
+  $('#stage').style.setProperty('--bodyh', bodyH + 'px');
+  
+  const col = (r, ms) =>
+    '<div class="col" data-round="' + r + '"><div class="col-title">' + ROUND_FULL[size >> r] + '</div>' +
+    '<div class="col-body">' + ms.map(m => '<div class="slot">' + tvCard(m, '', B) + '</div>').join('') + '</div></div>';
+  
+  let html = '';
+  // Susun kolom secara linear kiri ke kanan
+  for (let r = 0; r < R - 1; r++) { html += col(r, rounds[r]); }
+  
+  const fm = rounds[R - 1][0];
+  html += '<div class="col center" data-round="' + (R - 1) + '"><div class="col-title">Final</div>' +
+    '<div class="col-body"><div class="slot final-slot">' +
+      '<div class="champ ' + (B.champ ? 'has' : '') + '"><div class="trophy">🏆</div><div class="cl">JUARA</div><div class="cn">' + (B.champ ? esc(B.champ.name) : '—') + '</div></div>' +
+      tvCard(fm, '', B) + '</div></div></div>';
+      
+  $('#stage').innerHTML = html;
+}
+
+function rectRelative(el, container) {
+  let x = el.offsetLeft, y = el.offsetTop, n = el.offsetParent;
+  while (n && n !== container) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; }
+  return { x, y, w: el.offsetWidth, h: el.offsetHeight };
+}
+
+function drawLines(B) {
+  const svg = $('#lines'), stage = $('#stage');
+  if (!svg || !stage) return;
+  
+  const W = stage.scrollWidth, H = stage.scrollHeight;
+  svg.setAttribute('width', W); svg.setAttribute('height', H); 
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+  
+  const cards = {}; $$('.mcard', stage).forEach(c => { cards[c.dataset.r + '-' + c.dataset.i] = c; });
+  const base = [], on = [];
+  
+  for (let r = 0; r < B.R - 1; r++) {
+    B.rounds[r].forEach(m => {
+      if (m.kind === 'void') return;
+      const c = cards[r + '-' + m.i], p = cards[(r + 1) + '-' + (m.i >> 1)];
+      if (!c || !p || p.classList.contains('void')) return;
+      
+      const a = rectRelative(c, stage), b = rectRelative(p, stage);
+      // Garis dari kanan kartu ke kiri kartu babak selanjutnya
+      const x1 = a.x + a.w, x2 = b.x;
+      const y1 = a.y + a.h / 2, y2 = b.y + b.h / 2, xm = (x1 + x2) / 2;
+      const lit = m.winner.type === 'team' && (m.kind === 'done' || m.kind === 'bye');
+      
+      const pathStr = '<path class="' + (lit ? 'on' : '') + '" d="M' + x1 + ' ' + y1 + 'H' + xm + 'V' + y2 + 'H' + x2 + '"/>';
+      if (lit) on.push(pathStr); else base.push(pathStr);
+    });
+  }
+  svg.innerHTML = base.join('') + on.join('');
+}
+
+// Fitur Auto Scroll mencari round terakhir yang sedang aktif
+function scrollToActiveRound(B) {
+  let activeR = 0;
+  for (let r = 0; r < B.R; r++) {
+    if (B.rounds[r].some(m => m.kind === 'ready' || m.kind === 'done')) activeR = r;
+  }
+  const targetCol = $(`[data-round="${activeR}"]`);
+  if(targetCol) {
+    const viewport = $('#viewport');
+    // Geser hingga kolom aktif berada di tengah layar
+    const scrollPos = targetCol.offsetLeft - (viewport.clientWidth / 2) + (targetCol.offsetWidth / 2);
+    viewport.scrollTo({ left: Math.max(0, scrollPos), behavior: 'smooth' });
+  }
+}
+
+// Fade out hint text on scroll
+$('#viewport').addEventListener('scroll', () => {
+  $('#swipeHint').classList.add('fade');
+}, { once: true });
+
+async function pollServer() {
+  const raw = await fetchServerState();
+  if (raw && raw !== lastRaw) {
+    lastRaw = raw;
+    try { 
+      state = JSON.parse(raw); 
+      // Pastikan format tipe data sama seperti normalize() di admin
+      state.teams = state.teams || []; state.matches = state.matches || {};
+      state.bestOf = state.bestOf || 3; state.pointsTarget = state.pointsTarget || 21;
+      renderUI(); 
+    } catch(e) { console.error("Format data rusak", e); }
+  }
+}
+
+// Mulai aplikasi
+pollServer().then(() => {
+  $('#loadingScreen').classList.add('hide');
+  // Sync setiap 3 detik
+  setInterval(pollServer, 3000);
+});
+
+// Update SVG lines when window resizes
+window.addEventListener('resize', () => {
+  if (state && state.teams && state.teams.length) drawLines(computeBracket(state));
+});
+
+})();
+</script>
+</body>
+</html>
