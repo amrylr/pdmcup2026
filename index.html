@@ -846,12 +846,23 @@ function bindAdmin() {
   });
 
   const grid = $('#matchGrid');
+  let inputSaveTimer; // Timer untuk debounce auto-save
+  
   grid.addEventListener('input', e => {
     const t = e.target; if (t.dataset.act !== 'score') return;
     const r = +t.dataset.r, i = +t.dataset.i;
     setGame(r, i, +t.dataset.g, +t.dataset.side, t.value);
     updateCardStatus(t.closest('[data-card]'), r, i);
+    
+    // Auto-save live saat mengetik (jeda 0.8 detik) agar skor lgsg muncul di TV tanpa klik luar
+    clearTimeout(inputSaveTimer);
+    inputSaveTimer = setTimeout(() => {
+      save();
+      const m = computeBracket(state).rounds[r][i];
+      if (state.autoAdvance && m.kind === 'ready' && m.res.complete) doAdvance(r, i);
+    }, 800);
   });
+  
   grid.addEventListener('change', e => {
     const t = e.target; if (t.dataset.act !== 'score') return;
     const r = +t.dataset.r, i = +t.dataset.i;
@@ -859,6 +870,7 @@ function bindAdmin() {
     const m = computeBracket(state).rounds[r][i];
     if (state.autoAdvance && m.kind === 'ready' && m.res.complete) doAdvance(r, i);
   });
+  
   grid.addEventListener('click', e => {
     const b = e.target.closest('button[data-act]'); if (!b) return;
     const card = b.closest('[data-card]'), [r, i] = card.dataset.card.split('-').map(Number);
@@ -877,11 +889,14 @@ function bindAdmin() {
 const stage = $('#stage'), viewport = $('#viewport'), bar = $('#bar');
 let curB = null;
 
-// FUNGSI RENDER SKOR (DIREVISI AGAR TAMPIL WALAU MATCH BELUM SELESAI)
+// FUNGSI RENDER SKOR UNTUK MENAMPILKAN SKOR MESKIPUN BELUM SELESAI
 function tvCells(m, side) {
   let h = '';
   for (let k = 0; k < state.bestOf; k++) {
-    const g = m.g[k], on = g && (g[0] != null || g[1] != null);
+    const g = m.g[k];
+    
+    // Mengecek apakah kotak G1/G2/G3 sudah diisi angka (meskipun pertandingan blm selesai)
+    const on = g && (g[0] != null || g[1] != null); 
     if (!on) { h += '<span class="gs ghost">0</span>'; continue; }
     
     const val = g[side] != null ? g[side] : 0;
@@ -1132,8 +1147,8 @@ bindAdmin(); bindTV(); bindAuth();
 applyMode();
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (mode === 'tv' && curB) { drawLines(curB); applyFocus(false); } });
 
-// Mulai polling untuk sync live setiap 5 detik
-setInterval(pollServer, 5000);
+// Mulai polling untuk sync live setiap 4 detik
+setInterval(pollServer, 4000);
 
 })();
 </script>
