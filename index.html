@@ -231,7 +231,6 @@
      ===================================================================== -->
 <div id="adminRoot">
   <header class="sticky top-0 z-40 border-b border-white/10 bg-ink/85 backdrop-blur">
-    <!-- Header Disesuaikan untuk Mobile (flex-col sm:flex-row) -->
     <div class="mx-auto flex max-w-7xl flex-col sm:flex-row sm:flex-wrap items-center justify-between gap-x-6 gap-y-4 px-4 py-3">
       <div class="flex items-center gap-3 w-full sm:w-auto justify-center sm:justify-start">
         <div class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-neon/15 ring-1 ring-neon/40" id="adminLogoIcon"></div>
@@ -241,7 +240,7 @@
         </div>
       </div>
       
-      <!-- Nav Tabs dgn Scroll Horizontal di Mobile -->
+      <!-- Nav Tabs -->
       <nav id="tabs" class="flex w-full sm:w-auto overflow-x-auto scrollbar-hide gap-1 rounded-full bg-white/5 p-1 justify-start sm:justify-center">
         <button class="tab" data-tab="setup">Pengaturan</button>
         <button class="tab" data-tab="teams">Tim</button>
@@ -383,9 +382,7 @@
         </div>
         <p class="mt-2 text-xs text-slate-400">Isi skor asli tiap game (G1, G2, G3). Data otomatis tersimpan saat berpindah input.</p>
         
-        <!-- Tab manager dgn scroll di mobile -->
         <div id="roundTabs" class="mt-4 flex sm:flex-wrap overflow-x-auto scrollbar-hide gap-2 pb-1"></div>
-        
         <div id="matchGrid" class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3"></div>
       </div>
     </section>
@@ -482,7 +479,7 @@ function normalize(o) {
 }
 
 let state, lastRaw = null, mode = 'admin', isSaving = false;
-let adminTab = 'setup', adminRound = -1, toastT;
+let adminTab = 'setup', adminRound = -1, toastT, isSyncing = false;
 
 /* =====================================================================
    2. API & PERSISTENSI ONLINE (SPREADSHEET)
@@ -497,8 +494,10 @@ async function fetchServerState() {
   return null;
 }
 
-// Polling setiap 3 detik untuk menarik data terbaru
+// Polling setiap 3 detik dengan perlindungan input/sync
 async function pollServer() {
+  if (isSyncing) return; // JANGAN tarik data jika sedang proses simpan ke server agar input tidak mental
+
   const raw = await fetchServerState();
   if (raw && raw !== lastRaw) {
     lastRaw = raw;
@@ -523,6 +522,8 @@ async function save() {
   if(!API_URL || API_URL.includes("MASUKKAN_URL")) { updateSavedLabel(); return; }
   
   updateSavedLabel('Sedang sinkronisasi...');
+  isSyncing = true; // AKTIFKAN penanda sedang menyimpan
+  
   try {
     await fetch(API_URL, {
       method: 'POST', 
@@ -533,6 +534,8 @@ async function save() {
   } catch(e) {
     toast('Gagal sinkron dengan server. Tersimpan lokal.', 'warn');
     updateSavedLabel('Error Koneksi (Tersimpan Lokal)');
+  } finally {
+    isSyncing = false; // MATIKAN penanda setelah selesai/gagal
   }
 }
 
@@ -571,19 +574,36 @@ function gameValid(a, b, T) {
   if (w < cap) return l === w - 2;
   return l === cap - 1;
 }
+
+// FUNGSI EVALUASI MATCH YANG DIREVISI: 
+// Bisa mendeteksi kemenangan meskipun set yang tidak dimainkan dikosongkan.
 function evalMatch(g, s) {
   const need = Math.floor(s.bestOf / 2) + 1;
-  let wa = 0, wb = 0, valid = true, gap = false;
+  let wa = 0, wb = 0, valid = true;
+  
   for (let k = 0; k < s.bestOf; k++) {
     const x = g && g[k], fa = x && x[0] != null, fb = x && x[1] != null;
-    if (!fa && !fb) { gap = true; continue; }
-    if (!fa || !fb || gap || wa >= need || wb >= need) { valid = false; continue; }
-    if (!gameValid(x[0], x[1], s.pointsTarget)) { valid = false; continue; }
-    if (x[0] > x[1]) wa++; else wb++;
+    
+    // Jika tidak diisi (kosong)
+    if (!fa && !fb) continue;
+    
+    // Jika diisi sebagian atau format salah
+    if (!fa || !fb) { valid = false; continue; }
+    
+    // Evaluasi jika poin valid
+    if (gameValid(x[0], x[1], s.pointsTarget)) {
+      if (x[0] > x[1]) wa++; else wb++;
+    } else {
+      valid = false;
+    }
   }
-  const decided = wa >= need || wb >= need;
-  return { wa, wb, valid, decided, complete: valid && decided };
+  
+  const decided = (wa >= need || wb >= need);
+  // Match dianggap "complete" jika pemenang sudah ditentukan (decided = true) 
+  // DAN semua set yang ADA nilainya valid.
+  return { wa, wb, valid, decided, complete: decided && valid };
 }
+
 function touched(d) { return !!d && (d.done || (d.g || []).some(x => x && (x[0] != null || x[1] != null))); }
 
 function computeBracket(s) {
@@ -670,7 +690,6 @@ function restructure(fn) {
 function renderTeams() {
   $('#teamCount').textContent = state.teams.length + ' / ' + MAX_TEAMS;
   const L = state.teams.length;
-  // Menambahkan class min-w-0 pada input agar bisa mengecil dengan baik di HP
   $('#teamList').innerHTML = L ? state.teams.map((n, i) =>
     '<li class="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[.03] p-2">' +
       '<span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-neon/15 text-xs font-bold text-neon">' + (i + 1) + '</span>' +
@@ -703,7 +722,6 @@ function renderManager() {
 function renderMgrChrome(B) {
   const done = countDone(B), total = Math.max(B.N - 1, 0), pct = total ? Math.round(done / total * 100) : 0;
   
-  // Format rata tengah untuk HP, kiri/kanan untuk desktop
   $('#mgrSummary').innerHTML =
     '<div class="flex flex-wrap items-end gap-x-10 gap-y-4 justify-center sm:justify-start text-center sm:text-left">' +
       '<div><div class="label">Pertandingan Selesai</div><div class="font-display text-5xl leading-none">' + done + '<span class="text-slate-500"> / ' + total + '</span></div></div>' +
@@ -727,7 +745,7 @@ function amTeam(t) {
 function msgFor(m) {
   const filled = (m.g || []).some(x => x && (x[0] != null || x[1] != null));
   if (!filled) return ['', ''];
-  if (!m.res.valid) return ['Skor tidak valid. Selesai di ' + state.pointsTarget + ' (selisih 2).', ''];
+  if (!m.res.valid) return ['Pastikan ada pemenang (selisih 2 jika deuce, maks. skor valid).', ''];
   if (!m.res.decided) return ['Game ' + m.res.wa + '–' + m.res.wb + '. Lanjut.', 'ok'];
   return ['Pemenang ditentukan (' + m.res.wa + '–' + m.res.wb + ').', 'ok'];
 }
