@@ -93,7 +93,7 @@
   .am .nm.mute{color:#64748b;font-style:italic;font-weight:500}
   .am .r.win .nm{color:var(--neon)}
   .am .sc{width:46px!important;flex:0 0 46px;text-align:center;font:700 16px 'Barlow Condensed';padding:5px 2px}
-  .am .tm{width:66px;padding:4px 6px;text-align:center;font-size:12px;} /* Input Jam */
+  .am .tm{width:90px;padding:4px 8px;text-align:center;font-size:13px;font-weight:600;} /* Input Jam diperlebar agar menit terlihat */
   .am-msg{min-height:16px;font-size:11px;color:#ff9a9a;padding-top:6px}
   .am-msg.ok{color:#8fa0bb}
   .am .gl{width:46px;flex:0 0 46px;text-align:center;font:700 10px Montserrat;letter-spacing:.1em;color:#8fa0bb}
@@ -136,11 +136,11 @@
   .slot{flex:1;display:flex;align-items:center;justify-content:center;position:relative;}
   .final-slot{position:relative}
 
-  /* Badge Jam di tengah garis TV Mode */
-  .match-time { position:absolute; top:50%; background:#0e1525; border:1px solid rgba(61,255,122,.4); color:var(--neon); font:600 11px Montserrat; padding:2px 8px; border-radius:4px; z-index:5; box-shadow:0 2px 8px rgba(0,0,0,.5); }
+  /* Badge Jam diletakkan persis di tengah garis SVG, di luar kotak mcard */
+  .match-time { position:absolute; top:50%; background:#0e1525; border:1px solid rgba(61,255,122,.4); color:var(--neon); font:600 11px Montserrat; padding:2px 8px; border-radius:4px; z-index:5; box-shadow:0 2px 8px rgba(0,0,0,.5); white-space:nowrap; }
   .col[data-side="L"] .match-time { right:-35px; transform:translate(50%, -50%); }
   .col[data-side="R"] .match-time { left:-35px; transform:translate(-50%, -50%); }
-  .col.center .match-time { margin-top:58px; left:50%; transform:translate(-50%, -50%); }
+  .col.center .match-time { top:-14px; left:50%; transform:translateX(-50%); }
 
   .mcard{position:relative;width:var(--cw);border-radius:10px;overflow:hidden;background:linear-gradient(180deg,#131c32,#0d1424);border:1px solid rgba(148,163,184,.22);box-shadow:0 6px 18px rgba(0,0,0,.45);transition:all .5s ease-in-out}
   .mcard.ready{border-color:rgba(255,200,61,.7);box-shadow:0 0 0 1px rgba(255,200,61,.25),0 0 22px rgba(255,200,61,.2)}
@@ -168,7 +168,7 @@
   .trow.lose{opacity:.6}
   .trow.adv .tname{color:#b9f5cf}
 
-  .champ{position:absolute;left:50%;bottom:calc(50% + 55px);transform:translateX(-50%);width:calc(var(--cw) + 30px);text-align:center;transition:opacity .5s ease-in-out,filter .5s ease-in-out}
+  .champ{position:absolute;left:50%;bottom:calc(50% + 65px);transform:translateX(-50%);width:calc(var(--cw) + 30px);text-align:center;transition:opacity .5s ease-in-out,filter .5s ease-in-out}
   .champ .trophy{font-size:54px;line-height:1;filter:grayscale(1) opacity(.35);transition:filter .5s}
   .champ.has .trophy{filter:drop-shadow(0 0 18px rgba(255,200,61,.85))}
   .champ .cl{font:400 18px 'Bebas Neue',sans-serif;letter-spacing:.35em;color:var(--gold);padding-left:.35em}
@@ -204,7 +204,7 @@
     /* Admin - Match Card */
     .am { padding: 12px; }
     .am .sc { width: 34px !important; font-size: 14px; padding: 4px 0; }
-    .am .tm { width: 50px; font-size: 11px; padding: 4px 0; } /* Input Jam di Mobile */
+    .am .tm { width: 85px; font-size: 12px; padding: 4px; } /* Lebar diperlebar di mobile */
     .am .gl { width: 34px; font-size: 9px; }
     .am .seed-b { width: 16px; font-size: 10px; }
     .am .nm { font-size: 12px; }
@@ -469,8 +469,6 @@ function normalize(o) {
   s.teams = Array.isArray(s.teams) ? s.teams.slice(0, MAX_TEAMS).map(String) : [];
   s.matches = (s.matches && typeof s.matches === 'object') ? s.matches : {};
   s.bestOf = [1,3,5].includes(+s.bestOf) ? +s.bestOf : 3;
-  // pointsTarget global dipertahankan untuk backward compatibility struktur, 
-  // tetapi evaluasi per match akan di override oleh getTargetPts(r, size)
   s.pointsTarget = [11,15,21].includes(+s.pointsTarget) ? +s.pointsTarget : 21;
   const sp = Array.isArray(s.sponsors) ? s.sponsors.slice(0, 6) : [];
   while (sp.length < 6) sp.push('');
@@ -497,16 +495,12 @@ async function fetchServerState() {
   return null;
 }
 
-// Polling setiap 3 detik dengan perlindungan input/sync
 async function pollServer() {
-  if (isSyncing) return; // JANGAN tarik data jika sedang proses simpan ke server agar input tidak mental
-
+  if (isSyncing) return;
   const raw = await fetchServerState();
   if (raw && raw !== lastRaw) {
     lastRaw = raw;
     try { state = normalize(JSON.parse(raw)); localStorage.setItem(KEY, raw); } catch(e) { return; }
-    
-    // Perbarui UI otomatis jika ada yang berubah dari perangkat lain
     if (mode === 'tv') {
       renderTV();
       if (state.tvFocus) focusOn(state.tvFocus, false);
@@ -523,9 +517,8 @@ async function save() {
   localStorage.setItem(KEY, raw); 
   
   if(!API_URL || API_URL.includes("MASUKKAN_URL")) { updateSavedLabel(); return; }
-  
   updateSavedLabel('Sedang sinkronisasi...');
-  isSyncing = true; // AKTIFKAN penanda sedang menyimpan
+  isSyncing = true; 
   
   try {
     await fetch(API_URL, {
@@ -538,7 +531,7 @@ async function save() {
     toast('Gagal sinkron dengan server. Tersimpan lokal.', 'warn');
     updateSavedLabel('Error Koneksi (Tersimpan Lokal)');
   } finally {
-    isSyncing = false; // MATIKAN penanda setelah selesai/gagal
+    isSyncing = false;
   }
 }
 
@@ -553,7 +546,7 @@ function updateSavedLabel(textOverride) {
 }
 
 /* =====================================================================
-   3. BRACKET ENGINE (Dengan Logika Poin Dinamis)
+   3. BRACKET ENGINE (Termasuk Perebutan Juara 3)
    ===================================================================== */
 const $  = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -570,11 +563,8 @@ function seedOrder(size) {
   return o;
 }
 
-// LOGIKA POIN DINAMIS: Menentukan target poin berdasarkan babak (round index)
 function getTargetPts(r, size) {
   const roundSize = size >> r;
-  // roundSize: 64, 32, 16 => Poin 15.
-  // roundSize: 8, 4, 2 => Poin 21.
   if (roundSize >= 16) return 15;
   return 21;
 }
@@ -602,7 +592,6 @@ function evalMatch(g, s, targetPts) {
       valid = false;
     }
   }
-  
   const decided = (wa >= need || wb >= need);
   return { wa, wb, valid, decided, complete: decided && valid };
 }
@@ -614,9 +603,11 @@ function computeBracket(s) {
   const order = s.seedMode === 'order' ? Array.from({ length: size }, (_, k) => k + 1) : seedOrder(size);
   const slot = k => { const sd = order[k]; return sd <= N ? { type:'team', seed:sd, name:s.teams[sd - 1] } : BYE; };
   const rounds = []; let no = 0;
+  
+  // Hitung putaran utama (hingga Final)
   for (let r = 0; r < R; r++) {
     const cnt = size >> (r + 1), arr = [];
-    const currentTargetPts = getTargetPts(r, size); // Ambil target poin untuk babak ini
+    const currentTargetPts = getTargetPts(r, size); 
     
     for (let i = 0; i < cnt; i++) {
       const a = r === 0 ? slot(2 * i)     : rounds[r - 1][2 * i].winner;
@@ -636,22 +627,57 @@ function computeBracket(s) {
     }
     rounds.push(arr);
   }
+  
+  // Logika Perebutan Juara 3 (jika ada Semi Final / size >= 4)
+  if (R >= 2) {
+    const getLoser = m => {
+      if (m.kind === 'bye') return m.a.type === 'bye' ? m.a : (m.b.type === 'bye' ? m.b : BYE);
+      if (m.kind === 'done') return m.winner.seed === m.a.seed ? m.b : m.a;
+      return TBD;
+    };
+    const sf0 = rounds[R-2][0], sf1 = rounds[R-2][1];
+    const a = getLoser(sf0), b = getLoser(sf1);
+    const d = s.matches[(R-1) + '-1'] || {}; // ID unik untuk juara 3
+    const res = evalMatch(d.g, s, getTargetPts(R-1, size)); 
+    
+    const m3 = { r: R-1, i: 1, a, b, g: d.g || [], res, kind:'wait', winner:TBD, no:0, time: d.time || '', isThird: true };
+    if (a.type === 'bye' || b.type === 'bye') { m3.kind = 'void'; m3.winner = BYE; }
+    else if (a.type === 'team' && b.type === 'team') {
+      if (d.done && res.complete) { m3.kind = 'done'; m3.winner = res.wa > res.wb ? a : b; }
+      else m3.kind = 'ready';
+    }
+    if (m3.kind === 'ready' || m3.kind === 'wait' || m3.kind === 'done') m3.no = ++no;
+    
+    rounds[R-1].push(m3); // Masukkan Juara 3 ke array Final (R-1) agar sejajar
+  }
+
   const w = rounds[R - 1][0].winner;
   return { size, R, N, rounds, champ: w.type === 'team' ? w : null };
 }
+
 function countDone(B) { let n = 0; B.rounds.forEach(r => r.forEach(m => { if (m.kind === 'done') n++; })); return n; }
 function hasResults() { return Object.values(state.matches).some(touched); }
+
 function clearDownstream(r, i) {
   const R = Math.log2(bracketSize(state));
   if (r >= R - 1) return;
   const nr = r + 1, ni = i >> 1;
   delete state.matches[nr + '-' + ni];
   clearDownstream(nr, ni);
+  
+  // Jika membersihkan semifinal, bersihkan juga juara 3
+  if (r === R - 2) {
+    delete state.matches[(R - 1) + '-1'];
+  }
 }
 function downstreamTouched(r, i, R) {
   if (r >= R - 1) return false;
   const nr = r + 1, ni = i >> 1, n = state.matches[nr + '-' + ni];
   if (touched(n)) return true;
+  // Cek apakah juara 3 pernah disentuh (bila mereset SF)
+  if (r === R - 2) {
+    if (touched(state.matches[(R - 1) + '-1'])) return true;
+  }
   return downstreamTouched(nr, ni, R);
 }
 function setDone(r, i, flag) {
@@ -681,7 +707,6 @@ function renderSettings() {
   $('#sponsorList').innerHTML = state.sponsors.map((u, i) =>
     '<div class="flex items-center gap-3"><div class="thumb ' + (u ? '' : 'empty') + '" data-spthumb="' + i + '">' + thumbHTML(u) + '</div>' +
     '<input class="field" data-sp="' + i + '" value="' + esc(u) + '" placeholder="Sponsor ' + (i + 1) + ' (URL)"></div>').join('');
-  
   $('#selSize').value = String(state.sizeMode);
   $('#selSeed').value = state.seedMode;
   $('#selBo').value = String(state.bestOf);
@@ -725,7 +750,7 @@ function renderManager() {
   renderMgrChrome(B); renderMatchGrid(B);
 }
 function renderMgrChrome(B) {
-  const done = countDone(B), total = Math.max(B.N - 1, 0), pct = total ? Math.round(done / total * 100) : 0;
+  const done = countDone(B), total = Math.max(B.N - 1, 0) + (B.R >= 2 ? 1 : 0), pct = total ? Math.round(done / total * 100) : 0;
   
   $('#mgrSummary').innerHTML =
     '<div class="flex flex-wrap items-end gap-x-10 gap-y-4 justify-center sm:justify-start text-center sm:text-left">' +
@@ -737,7 +762,6 @@ function renderMgrChrome(B) {
 
   $('#roundTabs').innerHTML = B.rounds.map((arr, r) => {
     const play = arr.filter(m => ['ready', 'wait', 'done'].includes(m.kind)), dn = play.filter(m => m.kind === 'done').length;
-    // Tampilkan label poin target pada Tab Babak
     const pts = getTargetPts(r, B.size);
     return '<button class="rtab ' + (r === adminRound ? 'active' : '') + '" data-r="' + r + '">' + ROUND_FULL[B.size >> r] + ' (Poin ' + pts + ')<small>' + dn + '/' + play.length + '</small></button>';
   }).join('');
@@ -763,7 +787,6 @@ function matchCardHTML(m) {
       '<div class="r">' + amTeam(m.a) + '</div><div class="r">' + amTeam(m.b) + '</div></div>';
   }
   const edit = m.kind === 'ready', Gn = state.bestOf;
-  // Label baris skor: G1, G2, dsb. Ditambah Input Jam.
   const labels = '<div class="r" style="padding:0"><span class="seed-b"></span><span class="nm"></span>' +
     Array.from({ length: Gn }, (_, k) => '<span class="gl">G' + (k + 1) + '</span>').join('') + '</div>';
   const row = (t, side, win) =>
@@ -779,11 +802,12 @@ function matchCardHTML(m) {
   else if (m.kind === 'done') foot = '<button class="btn sm" data-act="undo">Ubah Hasil</button>';
   const [txt, cls] = msgFor(m);
   
-  // Header kartu + Input Jam (sekarang bebas input tanpa disabled)
+  // Teks Judul Kartu + Input Jam bebas
+  const titleText = m.isThird ? `Match #${m.no} (Juara 3)` : `Match #${m.no}`;
   const timeInput = `<input type="time" class="field tm" data-act="time" data-r="${m.r}" data-i="${m.i}" value="${esc(m.time)}" placeholder="Jam" title="Jam Main">`;
   
   return '<div class="am ' + m.kind + '" data-card="' + key + '">' +
-    '<div class="am-h"><span>Match #' + m.no + '</span><div class="flex items-center gap-2">' + timeInput + '<span class="chip ' + m.kind + '">' + chip + '</span></div></div>' +
+    '<div class="am-h"><span>' + titleText + '</span><div class="flex items-center gap-2">' + timeInput + '<span class="chip ' + m.kind + '">' + chip + '</span></div></div>' +
     labels + row(m.a, 0, wa) + row(m.b, 1, wb) +
     '<div class="am-msg ' + cls + '">' + esc(txt) + '</div>' +
     (foot ? '<div class="mt-1 flex justify-end">' + foot + '</div>' : '') + '</div>';
@@ -862,16 +886,15 @@ function bindAdmin() {
   $('#chkAuto').addEventListener('change', e => { state.autoAdvance = e.target.checked; save(); });
   $('#roundTabs').addEventListener('click', e => { const b = e.target.closest('[data-r]'); if (b) { adminRound = +b.dataset.r; renderMgrChrome(computeBracket(state)); renderMatchGrid(computeBracket(state)); } });
   
-  // Sinkronisasi fokus TV ke Online
   $('#tvCtl').addEventListener('click', e => {
     const b = e.target.closest('[data-tvfocus]'); if (!b) return;
     state.tvFocus = b.dataset.tvfocus === 'full' ? 'full' : +b.dataset.tvfocus;
-    save(); // Mengirim fokus ke server
+    save(); 
     renderMgrChrome(computeBracket(state));
   });
 
   const grid = $('#matchGrid');
-  let inputSaveTimer; // Timer untuk debounce auto-save
+  let inputSaveTimer; 
   
   grid.addEventListener('input', e => {
     const t = e.target; 
@@ -879,7 +902,7 @@ function bindAdmin() {
     const isTime = t.dataset.act === 'time';
     if (!isScore && !isTime) return;
     
-    const r = +t.dataset.r, i = +t.dataset.i;
+    const r = t.dataset.r, i = +t.dataset.i;
     
     if (isScore) {
       setGame(r, i, +t.dataset.g, +t.dataset.side, t.value);
@@ -888,7 +911,6 @@ function bindAdmin() {
       setMatchTime(r, i, t.value);
     }
     
-    // Auto-save live saat mengetik (jeda 0.8 detik)
     clearTimeout(inputSaveTimer);
     inputSaveTimer = setTimeout(() => {
       save();
@@ -903,7 +925,7 @@ function bindAdmin() {
     const isTime = t.dataset.act === 'time';
     if (!isScore && !isTime) return;
 
-    const r = +t.dataset.r, i = +t.dataset.i;
+    const r = t.dataset.r, i = +t.dataset.i;
     save();
     const m = computeBracket(state).rounds[r][i];
     if (isScore && state.autoAdvance && m.kind === 'ready' && m.res.complete) doAdvance(r, i);
@@ -911,7 +933,7 @@ function bindAdmin() {
   
   grid.addEventListener('click', e => {
     const b = e.target.closest('button[data-act]'); if (!b) return;
-    const card = b.closest('[data-card]'), [r, i] = card.dataset.card.split('-').map(Number);
+    const card = b.closest('[data-card]'), [r, i] = card.dataset.card.split('-');
     if (b.dataset.act === 'advance') doAdvance(r, i);
     if (b.dataset.act === 'undo') {
       const R = Math.log2(bracketSize(state));
@@ -927,19 +949,15 @@ function bindAdmin() {
 const stage = $('#stage'), viewport = $('#viewport'), bar = $('#bar');
 let curB = null;
 
-// FUNGSI RENDER SKOR UNTUK MENAMPILKAN SKOR MESKIPUN BELUM SELESAI
 function tvCells(m, side) {
   let h = '';
   for (let k = 0; k < state.bestOf; k++) {
     const g = m.g[k];
-    
-    // Mengecek apakah kotak G1/G2/G3 sudah diisi angka (meskipun pertandingan blm selesai)
     const on = g && (g[0] != null || g[1] != null); 
     if (!on) { h += '<span class="gs ghost">0</span>'; continue; }
     
     const val = g[side] != null ? g[side] : 0;
     const isWin = g[0] != null && g[1] != null && g[side] > g[1 - side];
-    
     h += '<span class="gs ' + (isWin ? 'w' : '') + '">' + val + '</span>';
   }
   return h;
@@ -956,14 +974,14 @@ function tvCard(m, side, B) {
   if (m.kind === 'done') { const aw = m.winner.seed === m.a.seed; ca = aw ? 'win' : 'lose'; cb = aw ? 'lose' : 'win'; }
   else if (m.kind === 'bye') { ca = m.a.type === 'team' ? 'adv' : ''; cb = m.b.type === 'team' ? 'adv' : ''; }
   
-  // Tampilkan badge jam terpisah dan ditempatkan pada garis penghubung SVG
   let timeBadge = '';
   if(m.time && m.kind !== 'bye') {
     timeBadge = '<div class="match-time">' + esc(m.time) + '</div>';
   }
 
-  return timeBadge + '<div class="mcard ' + m.kind + (m.r === B.R - 1 ? ' final' : '') + '" data-r="' + m.r + '" data-i="' + m.i + '" data-round="' + m.r + '" data-side="' + side + '">' +
-    tvTeamRow(m.a, tvCells(m, 0), ca) + tvTeamRow(m.b, tvCells(m, 1), cb) + '</div>';
+  return '<div style="position:relative;">' + timeBadge + 
+    '<div class="mcard ' + m.kind + (m.r === B.R - 1 && !m.isThird ? ' final' : '') + '" data-r="' + m.r + '" data-i="' + m.i + '" data-round="' + m.r + '" data-side="' + side + '">' +
+    tvTeamRow(m.a, tvCells(m, 0), ca) + tvTeamRow(m.b, tvCells(m, 1), cb) + '</div></div>';
 }
 
 function renderTV() {
@@ -987,7 +1005,7 @@ function renderHeader(B) {
   const sp = state.sponsors.filter(Boolean);
   $('#sponsorStrip').innerHTML = sp.map(u => '<div class="sp"><img src="' + esc(u) + '" alt="Sponsor"></div>').join('');
   $$('#sponsorStrip img').forEach(i => i.addEventListener('error', () => i.parentElement.remove()));
-  $('#hdStats').textContent = countDone(B) + ' / ' + Math.max(B.N - 1, 0) + ' laga selesai';
+  $('#hdStats').textContent = countDone(B) + ' / ' + (Math.max(B.N - 1, 0) + (B.R >= 2 ? 1 : 0)) + ' laga selesai';
 }
 
 function buildStage(B) {
@@ -997,13 +1015,30 @@ function buildStage(B) {
   const col = (r, side, ms) =>
     '<div class="col" data-round="' + r + '" data-side="' + side + '"><div class="col-title" data-round="' + r + '">' + ROUND_FULL[size >> r] + '</div>' +
     '<div class="col-body">' + ms.map(m => '<div class="slot">' + tvCard(m, side, B) + '</div>').join('') + '</div></div>';
+  
   let html = '<svg id="lines"></svg>';
+  
   for (let r = 0; r < R - 1; r++) html += col(r, 'L', rounds[r].slice(0, rounds[r].length / 2));
-  const fm = rounds[R - 1][0];
-  html += '<div class="col center" data-round="' + (R - 1) + '"><div class="col-title" data-round="' + (R - 1) + '">Final</div>' +
-    '<div class="col-body"><div class="slot final-slot">' +
-      '<div class="champ ' + (B.champ ? 'has' : '') + '" data-round="' + (R - 1) + '"><div class="trophy">🏆</div><div class="cl">JUARA</div><div class="cn">' + (B.champ ? esc(B.champ.name) : '—') + '</div></div>' +
-      tvCard(fm, 'C', B) + '</div></div></div>';
+  
+  const fm = rounds[R - 1][0]; // Final
+  const m3 = rounds[R - 1][1]; // Juara 3 (jika ada)
+  
+  let centerHtml = '<div class="col center" data-round="' + (R - 1) + '">' +
+    '<div class="col-title" data-round="' + (R - 1) + '">Final</div>' +
+    '<div class="col-body">' +
+      '<div class="slot final-slot">' +
+        '<div class="champ ' + (B.champ ? 'has' : '') + '" data-round="' + (R - 1) + '"><div class="trophy">🏆</div><div class="cl">JUARA</div><div class="cn">' + (B.champ ? esc(B.champ.name) : '—') + '</div></div>' +
+        tvCard(fm, 'C', B) + 
+      '</div>';
+      
+  if (m3 && m3.kind !== 'void') {
+      centerHtml += '<div class="col-title" data-round="' + (R - 1) + '" style="flex:0; margin-top:20px; font-size:20px; height:30px; color:var(--neon);">Juara 3</div>' +
+        '<div class="slot final-slot">' + tvCard(m3, 'C', B) + '</div>';
+  }
+  
+  centerHtml += '</div></div>';
+  html += centerHtml;
+  
   for (let r = R - 2; r >= 0; r--) html += col(r, 'R', rounds[r].slice(rounds[r].length / 2));
   stage.innerHTML = html;
 }
@@ -1019,16 +1054,19 @@ function drawLines(B) {
   svg.setAttribute('width', W); svg.setAttribute('height', H); svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
   const cards = {}; $$('.mcard', stage).forEach(c => { cards[c.dataset.r + '-' + c.dataset.i] = c; });
   const base = [], on = [];
-  for (let r = 0; r < B.R - 1; r++) B.rounds[r].forEach(m => {
-    if (m.kind === 'void') return;
-    const c = cards[r + '-' + m.i], p = cards[(r + 1) + '-' + (m.i >> 1)];
-    if (!c || !p || p.classList.contains('void')) return;
-    const a = rectIn(c), b = rectIn(p), left = c.dataset.side === 'L';
-    const x1 = left ? a.x + a.w : a.x, x2 = left ? b.x : b.x + b.w;
-    const y1 = a.y + a.h / 2, y2 = b.y + b.h / 2, xm = (x1 + x2) / 2;
-    const lit = m.winner.type === 'team' && (m.kind === 'done' || m.kind === 'bye');
-    (lit ? on : base).push('<path class="' + (lit ? 'on' : '') + '" data-r="' + r + '" d="M' + x1 + ' ' + y1 + 'H' + xm + 'V' + y2 + 'H' + x2 + '"/>');
-  });
+  
+  for (let r = 0; r < B.R - 1; r++) {
+    B.rounds[r].forEach(m => {
+      if (m.kind === 'void') return;
+      const c = cards[r + '-' + m.i], p = cards[(r + 1) + '-' + (m.i >> 1)];
+      if (!c || !p || p.classList.contains('void')) return;
+      const a = rectIn(c), b = rectIn(p), left = c.dataset.side === 'L';
+      const x1 = left ? a.x + a.w : a.x, x2 = left ? b.x : b.x + b.w;
+      const y1 = a.y + a.h / 2, y2 = b.y + b.h / 2, xm = (x1 + x2) / 2;
+      const lit = m.winner.type === 'team' && (m.kind === 'done' || m.kind === 'bye');
+      (lit ? on : base).push('<path class="' + (lit ? 'on' : '') + '" data-r="' + r + '" d="M' + x1 + ' ' + y1 + 'H' + xm + 'V' + y2 + 'H' + x2 + '"/>');
+    });
+  }
   svg.innerHTML = base.join('') + on.join('');
 }
 
@@ -1069,7 +1107,7 @@ function updateBar() { $$('#bar [data-focus]').forEach(b => b.classList.toggle('
 function focusOn(id, user) {
   if (user !== false) stopTour();
   state.tvFocus = id; updateBar(); updateHud(); applyFocus(true);
-  if(user !== false && mode === 'tv') save(); // Kirim ke server jika diklik dari TV
+  if(user !== false && mode === 'tv') save(); 
 }
 
 let tourOn = false, tourTimer = null;
@@ -1166,19 +1204,16 @@ function applyMode() {
 }
 window.addEventListener('hashchange', applyMode);
 
-// Mulai aplikasi: Muat data dari server
 $('#adminLogoIcon').innerHTML = LOGO_SVG.replace('width="42" height="42"', 'width="26" height="26"');
 $('#loginIcon').innerHTML = LOGO_SVG;
 
 try {
-  // Ambil data pertama kali
   const rawServerData = await fetchServerState();
   if (rawServerData) {
     lastRaw = rawServerData;
     state = normalize(JSON.parse(rawServerData));
-    localStorage.setItem(KEY, rawServerData); // Sinkronkan ke lokal
+    localStorage.setItem(KEY, rawServerData); 
   } else {
-    // Coba lokal jika server kosong / gagal
     const rawLocal = localStorage.getItem(KEY);
     if(rawLocal) { lastRaw = rawLocal; state = normalize(JSON.parse(rawLocal)); } 
     else { state = defaultState(); }
@@ -1187,13 +1222,12 @@ try {
   state = defaultState();
 }
 
-$('#loadingScreen').classList.add('hide'); // Matikan animasi loading
+$('#loadingScreen').classList.add('hide'); 
 bindAdmin(); bindTV(); bindAuth();
 applyMode();
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (mode === 'tv' && curB) { drawLines(curB); applyFocus(false); } });
 
-// Mulai polling untuk sync live setiap 3 detik
-setInterval(pollServer, 3000);
+setInterval(pollServer, 4000);
 
 })();
 </script>
