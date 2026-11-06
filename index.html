@@ -1023,17 +1023,23 @@ function buildStage(B) {
   const fm = rounds[R - 1][0]; // Final
   const m3 = rounds[R - 1][1]; // Juara 3 (jika ada)
   
+  // Menggunakan Grid 3 baris untuk menempatkan Final tepat di tengah vertical
   let centerHtml = '<div class="col center" data-round="' + (R - 1) + '">' +
     '<div class="col-title" data-round="' + (R - 1) + '">Final</div>' +
-    '<div class="col-body">' +
-      '<div class="slot final-slot">' +
+    '<div class="col-body" style="display:grid; grid-template-rows: 1fr auto 1fr; justify-items:center; align-items:center;">' +
+      '<div></div>' + // Spacer Atas
+      '<div class="slot final-slot" style="width:100%;">' +
         '<div class="champ ' + (B.champ ? 'has' : '') + '" data-round="' + (R - 1) + '"><div class="trophy">🏆</div><div class="cl">JUARA</div><div class="cn">' + (B.champ ? esc(B.champ.name) : '—') + '</div></div>' +
         tvCard(fm, 'C', B) + 
       '</div>';
       
   if (m3 && m3.kind !== 'void') {
-      centerHtml += '<div class="col-title" data-round="' + (R - 1) + '" style="flex:0; margin-top:20px; font-size:20px; height:30px; color:var(--neon);">Juara 3</div>' +
-        '<div class="slot final-slot">' + tvCard(m3, 'C', B) + '</div>';
+      centerHtml += '<div style="align-self:start; margin-top:40px; display:flex; flex-direction:column; align-items:center; gap:12px; width:100%;">' +
+        '<div class="col-title" data-round="' + (R - 1) + '" style="height:auto; min-height:28px; font-size:22px; color:var(--neon) !important; margin:0;">Juara 3</div>' +
+        '<div style="position:relative;">' + tvCard(m3, 'C', B) + '</div>' +
+        '</div>';
+  } else {
+      centerHtml += '<div></div>'; // Spacer Bawah jika tidak ada Juara 3
   }
   
   centerHtml += '</div></div>';
