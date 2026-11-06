@@ -84,10 +84,10 @@
   .final-slot { position: relative; }
 
   /* Badge Jam diletakkan persis di tengah garis SVG, di luar kotak mcard */
-  .match-time { position: absolute; top: 50%; background: #0e1525; border: 1px solid rgba(61,255,122,.4); color: var(--neon); font: 600 11px Montserrat; padding: 2px 8px; border-radius: 4px; z-index: 5; box-shadow: 0 2px 8px rgba(0,0,0,.5); }
+  .match-time { position: absolute; top: 50%; background: #0e1525; border: 1px solid rgba(61,255,122,.4); color: var(--neon); font: 600 11px Montserrat; padding: 2px 8px; border-radius: 4px; z-index: 5; box-shadow: 0 2px 8px rgba(0,0,0,.5); white-space: nowrap; }
   .col[data-side="L"] .match-time { right: -35px; transform: translate(50%, -50%); }
   .col[data-side="R"] .match-time { left: -35px; transform: translate(-50%, -50%); }
-  .col.center .match-time { margin-top: 58px; left: 50%; transform: translate(-50%, -50%); }
+  .col.center .match-time { top: -14px; left: 50%; transform: translateX(-50%); }
 
   /* Card UI (Mobile Tweaks) */
   .mcard { 
@@ -117,7 +117,7 @@
   .trow.lose { opacity: .6; }
   .trow.adv .tname { color: #b9f5cf; }
 
-  .champ { position: absolute; left: 50%; bottom: calc(50% + 45px); transform: translateX(-50%); width: 100%; text-align: center; }
+  .champ { position: absolute; left: 50%; bottom: calc(50% + 65px); transform: translateX(-50%); width: 100%; text-align: center; }
   .champ .trophy { font-size: 42px; line-height: 1; filter: grayscale(1) opacity(.35); }
   .champ.has .trophy { filter: drop-shadow(0 0 14px rgba(255,200,61,.85)); }
   .champ .cl { font: 400 16px 'Bebas Neue',sans-serif; letter-spacing: .2em; color: var(--gold); }
@@ -181,7 +181,6 @@ function nextPow2(n, min) { let p = min || 4; while (p < n) p *= 2; return p; }
 function bracketSize(s) { const need = Math.min(64, nextPow2(s.teams.length)); return s.sizeMode === 'auto' ? need : Math.min(64, Math.max(need, parseInt(s.sizeMode, 10) || need)); }
 function seedOrder(size) { let o = [1, 2]; for (let n = 4; n <= size; n *= 2) o = o.flatMap(x => [x, n + 1 - x]); return o; }
 
-// LOGIKA POIN DINAMIS (Sama dengan admin)
 function getTargetPts(r, size) {
   const roundSize = size >> r;
   if (roundSize >= 16) return 15;
@@ -211,7 +210,6 @@ function evalMatch(g, s, targetPts) {
       valid = false;
     }
   }
-  
   const decided = (wa >= need || wb >= need);
   return { wa, wb, valid, decided, complete: decided && valid };
 }
@@ -221,6 +219,7 @@ function computeBracket(s) {
   const order = s.seedMode === 'order' ? Array.from({ length: size }, (_, k) => k + 1) : seedOrder(size);
   const slot = k => { const sd = order[k]; return sd <= N ? { type:'team', seed:sd, name:s.teams[sd - 1] } : BYE; };
   const rounds = []; 
+  
   for (let r = 0; r < R; r++) {
     const cnt = size >> (r + 1), arr = [];
     const currentTargetPts = getTargetPts(r, size);
@@ -241,6 +240,27 @@ function computeBracket(s) {
     }
     rounds.push(arr);
   }
+  
+  if (R >= 2) {
+    const getLoser = m => {
+      if (m.kind === 'bye') return m.a.type === 'bye' ? m.a : (m.b.type === 'bye' ? m.b : BYE);
+      if (m.kind === 'done') return m.winner.seed === m.a.seed ? m.b : m.a;
+      return TBD;
+    };
+    const sf0 = rounds[R-2][0], sf1 = rounds[R-2][1];
+    const a = getLoser(sf0), b = getLoser(sf1);
+    const d = s.matches[(R-1) + '-1'] || {}; 
+    const res = evalMatch(d.g, s, getTargetPts(R-1, size)); 
+    
+    const m3 = { r: R-1, i: 1, a, b, g: d.g || [], res, kind:'wait', winner:TBD, time: d.time || '', isThird: true };
+    if (a.type === 'bye' || b.type === 'bye') { m3.kind = 'void'; m3.winner = BYE; }
+    else if (a.type === 'team' && b.type === 'team') {
+      if (d.done && res.complete) { m3.kind = 'done'; m3.winner = res.wa > res.wb ? a : b; }
+      else m3.kind = 'ready';
+    }
+    rounds[R-1].push(m3);
+  }
+  
   const w = rounds[R - 1][0].winner;
   return { size, R, N, rounds, champ: w.type === 'team' ? w : null };
 }
@@ -261,7 +281,6 @@ function renderUI() {
   buildStage(B);
   requestAnimationFrame(() => drawLines(B));
   
-  // Auto scroll ke kolom babak terbaru pada saat load pertama
   if(firstRender) {
     firstRender = false;
     setTimeout(() => { scrollToActiveRound(B); }, 500);
@@ -273,14 +292,12 @@ function renderHeader(B) {
   const validLogos = (state.eventLogos || []).filter(Boolean);
   
   let headerHtml = '';
-  
   if (validLogos.length > 0) {
     headerHtml += validLogos.map(u => '<img src="' + esc(u) + '">').join('');
     headerHtml += '<div class="brand"><span>PDM CUP 2026</span></div>';
   } else {
     headerHtml += '<div class="brand"><svg width="28" height="28" viewBox="0 0 64 64" fill="none" stroke="#3dff7a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><circle cx="46" cy="46" r="9" fill="#3dff7a"/><path d="M40 40 L12 20"/><path d="M40 40 L20 12"/><path d="M40 40 L27 8"/><path d="M40 40 L8 28"/></svg><span>PDM CUP 2026</span></div>';
   }
-  
   lw.innerHTML = headerHtml;
 
   const sp = (state.sponsors || []).filter(Boolean);
@@ -296,7 +313,6 @@ function tvCells(m, side) {
     
     const val = g[side] != null ? g[side] : 0;
     const isWin = g[0] != null && g[1] != null && g[side] > g[1 - side];
-    
     h += '<span class="gs ' + (isWin ? 'w' : '') + '">' + val + '</span>';
   }
   return h;
@@ -315,20 +331,19 @@ function tvCard(m, side, B) {
   if (m.kind === 'done') { const aw = m.winner.seed === m.a.seed; ca = aw ? 'win' : 'lose'; cb = aw ? 'lose' : 'win'; }
   else if (m.kind === 'bye') { ca = m.a.type === 'team' ? 'adv' : ''; cb = m.b.type === 'team' ? 'adv' : ''; }
   
-  // Tampilkan badge jam terpisah dan ditempatkan pada garis penghubung SVG
   let timeBadge = '';
   if(m.time && m.kind !== 'bye') {
     timeBadge = '<div class="match-time">' + esc(m.time) + '</div>';
   }
 
-  return timeBadge + '<div class="mcard ' + m.kind + (m.r === B.R - 1 ? ' final' : '') + '" data-r="' + m.r + '" data-i="' + m.i + '" data-round="' + m.r + '" data-side="' + side + '">' +
-    tvTeamRow(m.a, tvCells(m, 0), ca) + tvTeamRow(m.b, tvCells(m, 1), cb) + '</div>';
+  return '<div style="position:relative;">' + timeBadge + 
+    '<div class="mcard ' + m.kind + (m.r === B.R - 1 && !m.isThird ? ' final' : '') + '" data-r="' + m.r + '" data-i="' + m.i + '" data-side="' + side + '">' +
+    tvTeamRow(m.a, tvCells(m, 0), ca) + tvTeamRow(m.b, tvCells(m, 1), cb) + '</div></div>';
 }
 
 function buildStage(B) {
   const { R, size, rounds } = B;
   
-  // Hitung tinggi stage berdasarkan jumlah match
   const r0matches = size / 4; 
   const matchHeight = 74; 
   const bodyH = Math.max(300, r0matches * matchHeight);
@@ -339,18 +354,27 @@ function buildStage(B) {
     '<div class="col-body">' + ms.map(m => '<div class="slot">' + tvCard(m, side, B) + '</div>').join('') + '</div></div>';
   
   let html = '';
-  
-  // Susun Kolom Kiri
   for (let r = 0; r < R - 1; r++) html += col(r, 'L', rounds[r].slice(0, rounds[r].length / 2));
   
-  // Susun Kolom Tengah (Final)
-  const fm = rounds[R - 1][0];
-  html += '<div class="col center" data-round="' + (R - 1) + '"><div class="col-title">Final</div>' +
-    '<div class="col-body"><div class="slot final-slot">' +
-      '<div class="champ ' + (B.champ ? 'has' : '') + '"><div class="trophy">🏆</div><div class="cl">JUARA</div><div class="cn">' + (B.champ ? esc(B.champ.name) : '—') + '</div></div>' +
-      tvCard(fm, 'C', B) + '</div></div></div>';
+  const fm = rounds[R - 1][0]; 
+  const m3 = rounds[R - 1][1]; 
+  
+  let centerHtml = '<div class="col center" data-round="' + (R - 1) + '">' +
+    '<div class="col-title">Final</div>' +
+    '<div class="col-body">' +
+      '<div class="slot final-slot">' +
+        '<div class="champ ' + (B.champ ? 'has' : '') + '"><div class="trophy">🏆</div><div class="cl">JUARA</div><div class="cn">' + (B.champ ? esc(B.champ.name) : '—') + '</div></div>' +
+        tvCard(fm, 'C', B) + 
+      '</div>';
       
-  // Susun Kolom Kanan
+  if (m3 && m3.kind !== 'void') {
+      centerHtml += '<div class="col-title" style="flex:0; margin-top:20px; font-size:20px; height:30px; color:var(--neon);">Juara 3</div>' +
+        '<div class="slot final-slot">' + tvCard(m3, 'C', B) + '</div>';
+  }
+  
+  centerHtml += '</div></div>';
+  html += centerHtml;
+      
   for (let r = R - 2; r >= 0; r--) html += col(r, 'R', rounds[r].slice(rounds[r].length / 2));
       
   $('#stage').innerHTML = html;
@@ -382,7 +406,6 @@ function drawLines(B) {
       const a = rectRelative(c, stage), b = rectRelative(p, stage);
       const left = c.dataset.side === 'L';
       
-      // Menarik garis otomatis menyatu ke tengah menyesuaikan posisi kartu Kiri/Kanan
       const x1 = left ? a.x + a.w : a.x;
       const x2 = left ? b.x : b.x + b.w;
       const y1 = a.y + a.h / 2, y2 = b.y + b.h / 2, xm = (x1 + x2) / 2;
@@ -395,7 +418,6 @@ function drawLines(B) {
   svg.innerHTML = base.join('') + on.join('');
 }
 
-// Fitur Auto Scroll mencari round terakhir yang sedang aktif
 function scrollToActiveRound(B) {
   let activeR = 0;
   for (let r = 0; r < B.R; r++) {
@@ -404,13 +426,11 @@ function scrollToActiveRound(B) {
   const targetCol = $(`[data-round="${activeR}"][data-side="L"]`) || $(`[data-round="${activeR}"]`);
   if(targetCol) {
     const viewport = $('#viewport');
-    // Geser hingga kolom aktif berada di tengah layar
     const scrollPos = targetCol.offsetLeft - (viewport.clientWidth / 2) + (targetCol.offsetWidth / 2);
     viewport.scrollTo({ left: Math.max(0, scrollPos), behavior: 'smooth' });
   }
 }
 
-// Fade out hint text on scroll
 $('#viewport').addEventListener('scroll', () => {
   $('#swipeHint').classList.add('fade');
 }, { once: true });
@@ -421,22 +441,18 @@ async function pollServer() {
     lastRaw = raw;
     try { 
       state = JSON.parse(raw); 
-      // Pastikan format tipe data sama seperti normalize() di admin
       state.teams = state.teams || []; state.matches = state.matches || {};
       state.bestOf = state.bestOf || 3;
       renderUI(); 
-    } catch(e) { console.error("Format data rusak", e); }
+    } catch(e) {}
   }
 }
 
-// Mulai aplikasi
 pollServer().then(() => {
   $('#loadingScreen').classList.add('hide');
-  // Sync setiap 3 detik
-  setInterval(pollServer, 3000);
+  setInterval(pollServer, 4000);
 });
 
-// Update SVG lines when window resizes
 window.addEventListener('resize', () => {
   if (state && state.teams && state.teams.length) drawLines(computeBracket(state));
 });
