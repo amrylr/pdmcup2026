@@ -28,7 +28,7 @@
     --ink:#070b14; --neon:#3dff7a; --gold:#ffc83d;
     --cw:240px;        /* Lebar kartu dioptimalkan untuk mobile */
     --rowh:34px;       /* Tinggi baris tim sedikit dikecilkan */
-    --colgap:40px;     /* Jarak antar babak */
+    --colgap:70px;     /* Garis penghubung diperpanjang agar jam muat sempurna */
   }
   html,body{margin:0;background:var(--ink);color:#e6edf7;font-family:Montserrat,sans-serif;height:100%;overflow:hidden;}
   body{
@@ -80,8 +80,14 @@
   }
   .col.center .col-title { color: var(--gold); }
   .col-body { display: flex; flex-direction: column; height: var(--bodyh); }
-  .slot { flex: 1; display: flex; align-items: center; justify-content: center; }
+  .slot { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; }
   .final-slot { position: relative; }
+
+  /* Badge Jam diletakkan persis di tengah garis SVG, di luar kotak mcard */
+  .match-time { position: absolute; top: 50%; background: #0e1525; border: 1px solid rgba(61,255,122,.4); color: var(--neon); font: 600 11px Montserrat; padding: 2px 8px; border-radius: 4px; z-index: 5; box-shadow: 0 2px 8px rgba(0,0,0,.5); }
+  .col[data-side="L"] .match-time { right: -35px; transform: translate(50%, -50%); }
+  .col[data-side="R"] .match-time { left: -35px; transform: translate(-50%, -50%); }
+  .col.center .match-time { margin-top: 58px; left: 50%; transform: translate(-50%, -50%); }
 
   /* Card UI (Mobile Tweaks) */
   .mcard { 
@@ -156,7 +162,7 @@
 
 <script>
 // =====================================================================
-// KONFIGURASI API (Sama dengan versi Admin)
+// KONFIGURASI API
 // =====================================================================
 const API_URL = "https://script.google.com/macros/s/AKfycbzwYha1cIwjXEkyD9LuP_8Fx2PUFFr6IEioE2VicfwJRWY6J8A3ZLt372IHWWMb_mia/exec"; 
 
@@ -175,6 +181,13 @@ function nextPow2(n, min) { let p = min || 4; while (p < n) p *= 2; return p; }
 function bracketSize(s) { const need = Math.min(64, nextPow2(s.teams.length)); return s.sizeMode === 'auto' ? need : Math.min(64, Math.max(need, parseInt(s.sizeMode, 10) || need)); }
 function seedOrder(size) { let o = [1, 2]; for (let n = 4; n <= size; n *= 2) o = o.flatMap(x => [x, n + 1 - x]); return o; }
 
+// LOGIKA POIN DINAMIS (Sama dengan admin)
+function getTargetPts(r, size) {
+  const roundSize = size >> r;
+  if (roundSize >= 16) return 15;
+  return 21;
+}
+
 function gameValid(a, b, T) {
   if (!Number.isInteger(a) || !Number.isInteger(b) || a < 0 || b < 0 || a === b) return false;
   const w = Math.max(a, b), l = Math.min(a, b), cap = T + 9;
@@ -184,7 +197,7 @@ function gameValid(a, b, T) {
   return l === cap - 1;
 }
 
-function evalMatch(g, s) {
+function evalMatch(g, s, targetPts) {
   const need = Math.floor(s.bestOf / 2) + 1;
   let wa = 0, wb = 0, valid = true;
   
@@ -192,7 +205,7 @@ function evalMatch(g, s) {
     const x = g && g[k], fa = x && x[0] != null, fb = x && x[1] != null;
     if (!fa && !fb) continue;
     if (!fa || !fb) { valid = false; continue; }
-    if (gameValid(x[0], x[1], s.pointsTarget)) {
+    if (gameValid(x[0], x[1], targetPts)) {
       if (x[0] > x[1]) wa++; else wb++;
     } else {
       valid = false;
@@ -210,12 +223,14 @@ function computeBracket(s) {
   const rounds = []; 
   for (let r = 0; r < R; r++) {
     const cnt = size >> (r + 1), arr = [];
+    const currentTargetPts = getTargetPts(r, size);
+    
     for (let i = 0; i < cnt; i++) {
       const a = r === 0 ? slot(2 * i) : rounds[r - 1][2 * i].winner;
       const b = r === 0 ? slot(2 * i + 1) : rounds[r - 1][2 * i + 1].winner;
       const d = s.matches[r + '-' + i] || {};
-      const res = evalMatch(d.g, s);
-      const m = { r, i, a, b, g: d.g || [], res, kind:'wait', winner:TBD };
+      const res = evalMatch(d.g, s, currentTargetPts);
+      const m = { r, i, a, b, g: d.g || [], res, kind:'wait', winner:TBD, time: d.time || '' };
       if (a.type === 'bye' && b.type === 'bye') { m.kind = 'void'; m.winner = BYE; }
       else if (a.type === 'bye' || b.type === 'bye') { m.kind = 'bye'; m.winner = a.type === 'bye' ? b : a; }
       else if (a.type === 'team' && b.type === 'team') {
@@ -299,14 +314,21 @@ function tvCard(m, side, B) {
   let ca = '', cb = '';
   if (m.kind === 'done') { const aw = m.winner.seed === m.a.seed; ca = aw ? 'win' : 'lose'; cb = aw ? 'lose' : 'win'; }
   else if (m.kind === 'bye') { ca = m.a.type === 'team' ? 'adv' : ''; cb = m.b.type === 'team' ? 'adv' : ''; }
-  return '<div class="mcard ' + m.kind + (m.r === B.R - 1 ? ' final' : '') + '" data-r="' + m.r + '" data-i="' + m.i + '" data-side="' + side + '">' +
+  
+  // Tampilkan badge jam terpisah dan ditempatkan pada garis penghubung SVG
+  let timeBadge = '';
+  if(m.time && m.kind !== 'bye') {
+    timeBadge = '<div class="match-time">' + esc(m.time) + '</div>';
+  }
+
+  return timeBadge + '<div class="mcard ' + m.kind + (m.r === B.R - 1 ? ' final' : '') + '" data-r="' + m.r + '" data-i="' + m.i + '" data-round="' + m.r + '" data-side="' + side + '">' +
     tvTeamRow(m.a, tvCells(m, 0), ca) + tvTeamRow(m.b, tvCells(m, 1), cb) + '</div>';
 }
 
 function buildStage(B) {
   const { R, size, rounds } = B;
   
-  // Hitung tinggi stage berdasarkan jumlah match (dibagi 4 karena kini disebar ke kiri dan kanan)
+  // Hitung tinggi stage berdasarkan jumlah match
   const r0matches = size / 4; 
   const matchHeight = 74; 
   const bodyH = Math.max(300, r0matches * matchHeight);
@@ -401,7 +423,7 @@ async function pollServer() {
       state = JSON.parse(raw); 
       // Pastikan format tipe data sama seperti normalize() di admin
       state.teams = state.teams || []; state.matches = state.matches || {};
-      state.bestOf = state.bestOf || 3; state.pointsTarget = state.pointsTarget || 21;
+      state.bestOf = state.bestOf || 3;
       renderUI(); 
     } catch(e) { console.error("Format data rusak", e); }
   }
