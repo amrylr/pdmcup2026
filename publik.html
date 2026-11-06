@@ -4,24 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>PDM Cup 2026 – Bracket Peserta</title>
-<!-- Meta description standar -->
-<meta name="description" content="Pantau bracket dan skor pertandingan PDM Cup 2026 secara langsung (Live Update).">
-
-<!-- Open Graph / WhatsApp / Facebook Meta Tags -->
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="PDM Cup 2026">
-<meta property="og:title" content="🔴 PDM Cup 2026 – Live Bracket & Skor Pertandingan">
-<meta property="og:description" content="Lihat posisi tim, jadwal babak, dan pantau skor pertandingan PDM Cup 2026 yang diupdate secara real-time.">
-<meta property="og:url" content="https://sites.google.com/view/pdmcup2026/bracket">
-<meta property="og:image" content="https://github.com/amrylr/pdmcup2026/blob/main/pdmcup.png?raw=true">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-
-<!-- Twitter Card (Opsional, mempercantik share di platform lain) -->
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="🔴 PDM Cup 2026 – Live Bracket">
-<meta name="twitter:description" content="Lihat posisi tim dan pantau skor pertandingan PDM Cup 2026 secara real-time.">
-<meta name="twitter:image" content="https://github.com/amrylr/pdmcup2026/blob/main/pdmcup.png?raw=true"> <!-- Samakan dengan link gambar OG di atas -->
 
 <!-- Font -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -160,13 +142,7 @@
 </div>
 
 <header id="header">
-  <div id="logoWrap">
-    <!-- SVG Bawaan jika tidak ada logo -->
-    <div class="brand">
-      <svg width="28" height="28" viewBox="0 0 64 64" fill="none" stroke="#3dff7a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><circle cx="46" cy="46" r="9" fill="#3dff7a"/><path d="M40 40 L12 20"/><path d="M40 40 L20 12"/><path d="M40 40 L27 8"/><path d="M40 40 L8 28"/></svg>
-      <span>PDM CUP 2026</span>
-    </div>
-  </div>
+  <div id="logoWrap"></div>
   <div id="sponsorStrip"></div>
   <div class="live-badge"><i></i> Live Update</div>
 </header>
@@ -210,16 +186,21 @@ function gameValid(a, b, T) {
 
 function evalMatch(g, s) {
   const need = Math.floor(s.bestOf / 2) + 1;
-  let wa = 0, wb = 0, valid = true, gap = false;
+  let wa = 0, wb = 0, valid = true;
+  
   for (let k = 0; k < s.bestOf; k++) {
     const x = g && g[k], fa = x && x[0] != null, fb = x && x[1] != null;
-    if (!fa && !fb) { gap = true; continue; }
-    if (!fa || !fb || gap || wa >= need || wb >= need) { valid = false; continue; }
-    if (!gameValid(x[0], x[1], s.pointsTarget)) { valid = false; continue; }
-    if (x[0] > x[1]) wa++; else wb++;
+    if (!fa && !fb) continue;
+    if (!fa || !fb) { valid = false; continue; }
+    if (gameValid(x[0], x[1], s.pointsTarget)) {
+      if (x[0] > x[1]) wa++; else wb++;
+    } else {
+      valid = false;
+    }
   }
-  const decided = wa >= need || wb >= need;
-  return { wa, wb, valid, decided, complete: valid && decided };
+  
+  const decided = (wa >= need || wb >= need);
+  return { wa, wb, valid, decided, complete: decided && valid };
 }
 
 function computeBracket(s) {
@@ -279,11 +260,9 @@ function renderHeader(B) {
   let headerHtml = '';
   
   if (validLogos.length > 0) {
-    // Jika admin memasukkan logo: Tampilkan logo + Teks PDM CUP 2026
     headerHtml += validLogos.map(u => '<img src="' + esc(u) + '">').join('');
     headerHtml += '<div class="brand"><span>PDM CUP 2026</span></div>';
   } else {
-    // Jika kosong: Tampilkan SVG bawaan + Teks PDM CUP 2026
     headerHtml += '<div class="brand"><svg width="28" height="28" viewBox="0 0 64 64" fill="none" stroke="#3dff7a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><circle cx="46" cy="46" r="9" fill="#3dff7a"/><path d="M40 40 L12 20"/><path d="M40 40 L20 12"/><path d="M40 40 L27 8"/><path d="M40 40 L8 28"/></svg><span>PDM CUP 2026</span></div>';
   }
   
@@ -296,9 +275,14 @@ function renderHeader(B) {
 function tvCells(m, side) {
   let h = '';
   for (let k = 0; k < state.bestOf; k++) {
-    const g = m.g[k], on = m.kind === 'done' && g && g[0] != null && g[1] != null;
+    const g = m.g[k];
+    const on = g && (g[0] != null || g[1] != null); 
     if (!on) { h += '<span class="gs ghost">0</span>'; continue; }
-    h += '<span class="gs ' + (g[side] > g[1 - side] ? 'w' : '') + '">' + g[side] + '</span>';
+    
+    const val = g[side] != null ? g[side] : 0;
+    const isWin = g[0] != null && g[1] != null && g[side] > g[1 - side];
+    
+    h += '<span class="gs ' + (isWin ? 'w' : '') + '">' + val + '</span>';
   }
   return h;
 }
@@ -315,32 +299,37 @@ function tvCard(m, side, B) {
   let ca = '', cb = '';
   if (m.kind === 'done') { const aw = m.winner.seed === m.a.seed; ca = aw ? 'win' : 'lose'; cb = aw ? 'lose' : 'win'; }
   else if (m.kind === 'bye') { ca = m.a.type === 'team' ? 'adv' : ''; cb = m.b.type === 'team' ? 'adv' : ''; }
-  return '<div class="mcard ' + m.kind + (m.r === B.R - 1 ? ' final' : '') + '" data-r="' + m.r + '" data-i="' + m.i + '">' +
+  return '<div class="mcard ' + m.kind + (m.r === B.R - 1 ? ' final' : '') + '" data-r="' + m.r + '" data-i="' + m.i + '" data-side="' + side + '">' +
     tvTeamRow(m.a, tvCells(m, 0), ca) + tvTeamRow(m.b, tvCells(m, 1), cb) + '</div>';
 }
 
 function buildStage(B) {
   const { R, size, rounds } = B;
   
-  // Hitung tinggi stage berdasarkan jumlah match di babak pertama (R0)
-  const r0matches = size / 2;
-  const matchHeight = 74; // Tinggi mcard + sedikit jarak
+  // Hitung tinggi stage berdasarkan jumlah match (dibagi 4 karena kini disebar ke kiri dan kanan)
+  const r0matches = size / 4; 
+  const matchHeight = 74; 
   const bodyH = Math.max(300, r0matches * matchHeight);
   $('#stage').style.setProperty('--bodyh', bodyH + 'px');
   
-  const col = (r, ms) =>
-    '<div class="col" data-round="' + r + '"><div class="col-title">' + ROUND_FULL[size >> r] + '</div>' +
-    '<div class="col-body">' + ms.map(m => '<div class="slot">' + tvCard(m, '', B) + '</div>').join('') + '</div></div>';
+  const col = (r, side, ms) =>
+    '<div class="col" data-round="' + r + '" data-side="' + side + '"><div class="col-title">' + ROUND_FULL[size >> r] + '</div>' +
+    '<div class="col-body">' + ms.map(m => '<div class="slot">' + tvCard(m, side, B) + '</div>').join('') + '</div></div>';
   
   let html = '';
-  // Susun kolom secara linear kiri ke kanan
-  for (let r = 0; r < R - 1; r++) { html += col(r, rounds[r]); }
   
+  // Susun Kolom Kiri
+  for (let r = 0; r < R - 1; r++) html += col(r, 'L', rounds[r].slice(0, rounds[r].length / 2));
+  
+  // Susun Kolom Tengah (Final)
   const fm = rounds[R - 1][0];
   html += '<div class="col center" data-round="' + (R - 1) + '"><div class="col-title">Final</div>' +
     '<div class="col-body"><div class="slot final-slot">' +
       '<div class="champ ' + (B.champ ? 'has' : '') + '"><div class="trophy">🏆</div><div class="cl">JUARA</div><div class="cn">' + (B.champ ? esc(B.champ.name) : '—') + '</div></div>' +
-      tvCard(fm, '', B) + '</div></div></div>';
+      tvCard(fm, 'C', B) + '</div></div></div>';
+      
+  // Susun Kolom Kanan
+  for (let r = R - 2; r >= 0; r--) html += col(r, 'R', rounds[r].slice(rounds[r].length / 2));
       
   $('#stage').innerHTML = html;
 }
@@ -369,8 +358,11 @@ function drawLines(B) {
       if (!c || !p || p.classList.contains('void')) return;
       
       const a = rectRelative(c, stage), b = rectRelative(p, stage);
-      // Garis dari kanan kartu ke kiri kartu babak selanjutnya
-      const x1 = a.x + a.w, x2 = b.x;
+      const left = c.dataset.side === 'L';
+      
+      // Menarik garis otomatis menyatu ke tengah menyesuaikan posisi kartu Kiri/Kanan
+      const x1 = left ? a.x + a.w : a.x;
+      const x2 = left ? b.x : b.x + b.w;
       const y1 = a.y + a.h / 2, y2 = b.y + b.h / 2, xm = (x1 + x2) / 2;
       const lit = m.winner.type === 'team' && (m.kind === 'done' || m.kind === 'bye');
       
@@ -387,7 +379,7 @@ function scrollToActiveRound(B) {
   for (let r = 0; r < B.R; r++) {
     if (B.rounds[r].some(m => m.kind === 'ready' || m.kind === 'done')) activeR = r;
   }
-  const targetCol = $(`[data-round="${activeR}"]`);
+  const targetCol = $(`[data-round="${activeR}"][data-side="L"]`) || $(`[data-round="${activeR}"]`);
   if(targetCol) {
     const viewport = $('#viewport');
     // Geser hingga kolom aktif berada di tengah layar
