@@ -10,6 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@500;600;700&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
+
 <!-- Tailwind CSS via CDN -->
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
@@ -26,10 +27,10 @@
   /* ================= TOKEN & BASE ================= */
   :root{
     --ink:#070b14; --neon:#3dff7a; --gold:#ffc83d;
-    --cw:280px;        /* lebar kartu pertandingan diperbesar sedikit untuk jam */
-    --rowh:36px;       /* tinggi baris tim */
-    --colgap:70px;     /* garis antar babak diperpanjang untuk jam */
-    --zoom-dur:.8s;    /* durasi animasi zoom kamera */
+    --cw:280px;        
+    --rowh:36px;       
+    --colgap:70px;     
+    --zoom-dur:.8s;    
   }
   html,body{margin:0;background:var(--ink);color:#e6edf7;font-family:Montserrat,sans-serif;}
   body{
@@ -44,7 +45,6 @@
   .is-hidden{display:none!important}
   ::-webkit-scrollbar{width:10px;height:10px} ::-webkit-scrollbar-thumb{background:#243049;border-radius:8px}
 
-  /* Hilangkan scrollbar untuk elemen yang di-scroll horizontal di mobile */
   .scrollbar-hide::-webkit-scrollbar { display: none; }
   .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -79,7 +79,6 @@
   .thumb img{max-width:90%;max-height:90%;object-fit:contain}
   .thumb.empty{background:rgba(255,255,255,.05);border:1px dashed rgba(255,255,255,.2)}
 
-  /* kartu pertandingan di Bracket Manager */
   .am{border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:12px;background:rgba(255,255,255,.03)}
   .am.ready{border-color:rgba(255,200,61,.5)}
   .am.done{border-color:rgba(61,255,122,.4)}
@@ -93,12 +92,12 @@
   .am .nm.mute{color:#64748b;font-style:italic;font-weight:500}
   .am .r.win .nm{color:var(--neon)}
   .am .sc{width:46px!important;flex:0 0 46px;text-align:center;font:700 16px 'Barlow Condensed';padding:5px 2px}
-  .am .tm{width:90px;padding:4px 8px;text-align:center;font-size:13px;font-weight:600;} /* Input Jam diperlebar agar menit terlihat */
+  .am .tm{width:90px;padding:4px 8px;text-align:center;font-size:13px;font-weight:600;}
   .am-msg{min-height:16px;font-size:11px;color:#ff9a9a;padding-top:6px}
   .am-msg.ok{color:#8fa0bb}
   .am .gl{width:46px;flex:0 0 46px;text-align:center;font:700 10px Montserrat;letter-spacing:.1em;color:#8fa0bb}
 
-  #toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,30px);opacity:0;pointer-events:none;z-index:200;padding:12px 18px;border-radius:12px;background:#10261a;border:1px solid var(--neon);color:#d9ffe8;font:600 13px Montserrat;transition:all .35s ease-in-out;width:max-content;max-width:90vw;text-align:center;}
+  #toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,30px);opacity:0;pointer-events:none;z-index:9999;padding:12px 18px;border-radius:12px;background:#10261a;border:1px solid var(--neon);color:#d9ffe8;font:600 13px Montserrat;transition:all .35s ease-in-out;width:max-content;max-width:90vw;text-align:center;}
   #toast.show{opacity:1;transform:translate(-50%,0)}
   #toast.err{background:#3b1219;border-color:#ff6b6b;color:#ffd9d9}
   #toast.warn{background:#3b2d12;border-color:#ffcc6b;color:#ffe9d9}
@@ -136,7 +135,6 @@
   .slot{flex:1;display:flex;align-items:center;justify-content:center;position:relative;}
   .final-slot{position:relative}
 
-  /* Badge Jam diletakkan persis di tengah garis SVG, di luar kotak mcard */
   .match-time { position:absolute; top:50%; background:#0e1525; border:1px solid rgba(61,255,122,.4); color:var(--neon); font:600 11px Montserrat; padding:2px 8px; border-radius:4px; z-index:5; box-shadow:0 2px 8px rgba(0,0,0,.5); white-space:nowrap; }
   .col[data-side="L"] .match-time { right:-35px; transform:translate(50%, -50%); }
   .col[data-side="R"] .match-time { left:-35px; transform:translate(-50%, -50%); }
@@ -175,10 +173,6 @@
   .champ .cn{font:700 22px/1.1 'Barlow Condensed',sans-serif;color:#fff;overflow-wrap:anywhere}
   .champ.has .cn{text-shadow:0 0 18px rgba(255,200,61,.55)}
 
-  #hud{position:absolute;left:24px;top:12px;z-index:40;opacity:0;transform:translateY(-6px);transition:all .5s ease-in-out;pointer-events:none}
-  #hud.show{opacity:1;transform:none}
-  #hud small{display:block;font:700 11px Montserrat;letter-spacing:.35em;color:#8fa0bb}
-  #hud b{font:400 40px/1 'Bebas Neue',sans-serif;letter-spacing:.1em;color:var(--neon);text-shadow:0 0 20px rgba(61,255,122,.45)}
   #emptyMsg{position:absolute;inset:0;display:grid;place-items:center;font:400 34px 'Bebas Neue',sans-serif;letter-spacing:.15em;color:#5d6b84;z-index:30;pointer-events:none;text-align:center;padding:0 20px;}
 
   #bar{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:70;display:flex;gap:4px;align-items:center;padding:7px;max-width:96vw;overflow-x:auto;border-radius:999px;background:rgba(14,21,37,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.12);box-shadow:0 10px 40px rgba(0,0,0,.5);transition:opacity .5s ease-in-out}
@@ -190,35 +184,27 @@
   .fbtn.active{background:var(--neon);color:#052613;box-shadow:0 0 18px rgba(61,255,122,.55)}
   .fbtn.util{padding:10px 12px}
   
-  /* Loading screen */
   #loadingScreen { position: fixed; inset: 0; background: #070b14; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; transition: opacity 0.5s; text-align:center; }
   #loadingScreen.hide { opacity: 0; pointer-events: none; }
   .spinner { width: 40px; height: 40px; border: 4px solid rgba(61,255,122,.2); border-top-color: var(--neon); border-radius: 50%; animation: spin 1s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ================= RESPONSIVE MOBILE TWEAKS ================= */
   @media (max-width: 640px) {
     .card { padding: 16px; }
     .card h2 { font-size: 22px; }
-    
-    /* Admin - Match Card */
     .am { padding: 12px; }
     .am .sc { width: 34px !important; font-size: 14px; padding: 4px 0; }
-    .am .tm { width: 85px; font-size: 12px; padding: 4px; } /* Lebar diperlebar di mobile */
+    .am .tm { width: 85px; font-size: 12px; padding: 4px; } 
     .am .gl { width: 34px; font-size: 9px; }
     .am .seed-b { width: 16px; font-size: 10px; }
     .am .nm { font-size: 12px; }
     .am-h { flex-wrap: wrap; gap: 4px; font-size: 10px; }
-
-    /* TV Mode Header */
     #tvHeader { grid-template-columns: 1fr; text-align: center; gap: 12px; padding: 12px; }
     .hd-left, .hd-right { justify-content: center; }
     .hd-left { order: -1; }
     .brand { font-size: 34px; justify-content: center; flex-wrap: wrap; }
     #logoWrap { flex-wrap: wrap; }
     #logoWrap img { height: 42px; }
-    
-    /* Buttons & Bars */
     .btn { padding: 8px 12px; }
     #bar { padding: 4px; gap: 2px; }
     .fbtn { padding: 8px 12px; font-size: 11px; }
@@ -228,7 +214,7 @@
 
 <body>
 
-<!-- Loading Overlay Awal -->
+<!-- Loading Overlay -->
 <div id="loadingScreen">
   <div class="spinner"></div>
   <div class="font-display text-2xl tracking-wider text-neon">Menghubungkan ke Database...</div>
@@ -248,7 +234,6 @@
         </div>
       </div>
       
-      <!-- Nav Tabs -->
       <nav id="tabs" class="flex w-full sm:w-auto overflow-x-auto scrollbar-hide gap-1 rounded-full bg-white/5 p-1 justify-start sm:justify-center">
         <button class="tab" data-tab="setup">Pengaturan</button>
         <button class="tab" data-tab="teams">Tim</button>
@@ -301,7 +286,6 @@
               <option value="order">Urut pendaftaran (1 vs 2, 3 vs 4, …)</option>
             </select>
           </div>
-          <!-- Menu Poin per Game Dihapus karena Otomatis berdasarkan Babak -->
           <div>
             <label class="label" for="selBo">Format Pertandingan (Rubber)</label>
             <select id="selBo" class="field">
@@ -369,11 +353,22 @@
     <!-- ===== PANEL: BRACKET ===== -->
     <section data-panel="bracket" class="space-y-6">
       <div class="card" id="mgrSummary"></div>
+      
       <div class="card">
-        <h2>Kontrol Layar TV</h2>
-        <p class="mt-2 text-xs text-slate-400">Klik tombol di bawah ini untuk mengarahkan kamera/fokus di semua perangkat TV yang sedang terhubung.</p>
+        <h2>Kontrol Layar TV &amp; Ekspor</h2>
+        <p class="mt-2 text-xs text-slate-400">Klik tombol di bawah ini untuk mengarahkan kamera TV, atau untuk mengunduh gambar Bagan (HD).</p>
         <div id="tvCtl" class="mt-3 flex flex-wrap gap-2"></div>
+        <div class="mt-5 pt-5 border-t border-white/10 flex flex-wrap items-center gap-3">
+          <select id="selDlScale" class="field" style="width:auto" title="Resolusi gambar">
+            <option value="2" selected>HD (2×)</option>
+            <option value="3">Ultra HD (3×)</option>
+            <option value="1">Standar (1×)</option>
+          </select>
+          <button id="btnDownloadHD" class="btn neon">Unduh Bagan (HD Image) ⬇</button>
+        </div>
+        <p class="mt-2 text-xs text-slate-400">Gambar mencakup seluruh bagan dari babak awal sampai Final + Juara 3, tidak tergantung tampilan TV.</p>
       </div>
+
       <div class="card overflow-hidden">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <h2>Bracket Manager</h2>
@@ -406,7 +401,6 @@
 
   <div id="viewport">
     <div id="stage"></div>
-    <div id="hud"><small>FOKUS</small><b></b></div>
     <div id="emptyMsg" class="is-hidden">Belum ada tim terdaftar</div>
   </div>
 
@@ -483,7 +477,7 @@ let state, lastRaw = null, mode = 'admin', isSaving = false;
 let adminTab = 'setup', adminRound = -1, toastT, isSyncing = false;
 
 /* =====================================================================
-   2. API & PERSISTENSI ONLINE (SPREADSHEET)
+   2. API & PERSISTENSI ONLINE
    ===================================================================== */
 async function fetchServerState() {
   if(!API_URL || API_URL.includes("MASUKKAN_URL")) return null;
@@ -546,7 +540,7 @@ function updateSavedLabel(textOverride) {
 }
 
 /* =====================================================================
-   3. BRACKET ENGINE (Termasuk Perebutan Juara 3)
+   3. BRACKET ENGINE
    ===================================================================== */
 const $  = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -581,7 +575,6 @@ function gameValid(a, b, T) {
 function evalMatch(g, s, targetPts) {
   const need = Math.floor(s.bestOf / 2) + 1;
   let wa = 0, wb = 0, valid = true;
-  
   for (let k = 0; k < s.bestOf; k++) {
     const x = g && g[k], fa = x && x[0] != null, fb = x && x[1] != null;
     if (!fa && !fb) continue;
@@ -604,7 +597,6 @@ function computeBracket(s) {
   const slot = k => { const sd = order[k]; return sd <= N ? { type:'team', seed:sd, name:s.teams[sd - 1] } : BYE; };
   const rounds = []; let no = 0;
   
-  // Hitung putaran utama (hingga Final)
   for (let r = 0; r < R; r++) {
     const cnt = size >> (r + 1), arr = [];
     const currentTargetPts = getTargetPts(r, size); 
@@ -628,7 +620,7 @@ function computeBracket(s) {
     rounds.push(arr);
   }
   
-  // Logika Perebutan Juara 3 (jika ada Semi Final / size >= 4)
+  // Perebutan Juara 3
   if (R >= 2) {
     const getLoser = m => {
       if (m.kind === 'bye') return m.a.type === 'bye' ? m.a : (m.b.type === 'bye' ? m.b : BYE);
@@ -637,7 +629,7 @@ function computeBracket(s) {
     };
     const sf0 = rounds[R-2][0], sf1 = rounds[R-2][1];
     const a = getLoser(sf0), b = getLoser(sf1);
-    const d = s.matches[(R-1) + '-1'] || {}; // ID unik untuk juara 3
+    const d = s.matches[(R-1) + '-1'] || {}; 
     const res = evalMatch(d.g, s, getTargetPts(R-1, size)); 
     
     const m3 = { r: R-1, i: 1, a, b, g: d.g || [], res, kind:'wait', winner:TBD, no:0, time: d.time || '', isThird: true };
@@ -648,7 +640,7 @@ function computeBracket(s) {
     }
     if (m3.kind === 'ready' || m3.kind === 'wait' || m3.kind === 'done') m3.no = ++no;
     
-    rounds[R-1].push(m3); // Masukkan Juara 3 ke array Final (R-1) agar sejajar
+    rounds[R-1].push(m3); 
   }
 
   const w = rounds[R - 1][0].winner;
@@ -664,8 +656,6 @@ function clearDownstream(r, i) {
   const nr = r + 1, ni = i >> 1;
   delete state.matches[nr + '-' + ni];
   clearDownstream(nr, ni);
-  
-  // Jika membersihkan semifinal, bersihkan juga juara 3
   if (r === R - 2) {
     delete state.matches[(R - 1) + '-1'];
   }
@@ -674,7 +664,6 @@ function downstreamTouched(r, i, R) {
   if (r >= R - 1) return false;
   const nr = r + 1, ni = i >> 1, n = state.matches[nr + '-' + ni];
   if (touched(n)) return true;
-  // Cek apakah juara 3 pernah disentuh (bila mereset SF)
   if (r === R - 2) {
     if (touched(state.matches[(R - 1) + '-1'])) return true;
   }
@@ -802,7 +791,6 @@ function matchCardHTML(m) {
   else if (m.kind === 'done') foot = '<button class="btn sm" data-act="undo">Ubah Hasil</button>';
   const [txt, cls] = msgFor(m);
   
-  // Teks Judul Kartu + Input Jam bebas
   const titleText = m.isThird ? `Match #${m.no} (Juara 3)` : `Match #${m.no}`;
   const timeInput = `<input type="time" class="field tm" data-act="time" data-r="${m.r}" data-i="${m.i}" value="${esc(m.time)}" placeholder="Jam" title="Jam Main">`;
   
@@ -892,6 +880,373 @@ function bindAdmin() {
     save(); 
     renderMgrChrome(computeBracket(state));
   });
+
+  // =====================================================================
+  // UNDUH BAGAN HD — digambar langsung ke <canvas> dari data bracket.
+  // Tidak bergantung pada DOM / layar TV (jadi tetap jalan dari mode Admin),
+  // tanpa html2canvas, resolusi bisa dipilih, ukuran kanvas dibatasi otomatis.
+  // =====================================================================
+  const DL = { CW: 280, GAP: 70, ROWH: 36, TH: 44, CARDH: 75, PADX: 80, HS: 1.5 };
+
+  function dlLoadImage(url) {
+    return new Promise(res => {
+      const im = new Image();
+      im.crossOrigin = 'anonymous';
+      const t = setTimeout(() => res(null), 10000);
+      im.onload = () => { clearTimeout(t); res(im.naturalWidth ? im : null); };
+      im.onerror = () => { clearTimeout(t); res(null); };
+      im.src = url;
+    });
+  }
+
+  function dlMeasure(B, hasSp) {
+    const hs = DL.HS, logoH = 58 * hs;
+    const headerH = 36 + logoH + 14 + 22 + (hasSp ? 16 + 28 * hs : 0) + 36;
+    const bodyH = Math.max(560, (B.size / 4) * 82);
+    const stageW = (2 * (B.R - 1) + 1) * DL.CW + 2 * (B.R - 1) * DL.GAP;
+    const W = Math.max(stageW + DL.PADX * 2, 1400);
+    const stageTop = headerH + 24;
+    const H = stageTop + DL.TH + bodyH + 80;
+    return { logoH, headerH, bodyH, stageW, W, stageTop, H };
+  }
+
+  function dlRender(B, assets, scale) {
+    const { CW, GAP, ROWH, TH, CARDH, HS } = DL;
+    const R = B.R, bo = state.bestOf;
+    const hasSp = assets.sponsors.length > 0;
+    const M = dlMeasure(B, hasSp);
+    const { W, H, bodyH, stageW, stageTop, headerH, logoH } = M;
+    const ox = (W - stageW) / 2, oy = stageTop;
+
+    const cv = document.createElement('canvas');
+    cv.width = Math.round(W * scale); cv.height = Math.round(H * scale);
+    const ctx = cv.getContext('2d');
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    ctx.textBaseline = 'middle';
+
+    // ---------- helpers ----------
+    const rr = (x, y, w, h, r) => {
+      ctx.beginPath(); ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+    };
+    const spacedW = (t, sp) => { let w = 0; for (const ch of t) w += ctx.measureText(ch).width + sp; return Math.max(0, w - sp); };
+    const spaced = (t, x, y, sp, align) => {
+      const tw = spacedW(t, sp);
+      let cx = align === 'center' ? x - tw / 2 : align === 'right' ? x - tw : x;
+      ctx.textAlign = 'left';
+      for (const ch of t) { ctx.fillText(ch, cx, y); cx += ctx.measureText(ch).width + sp; }
+      return tw;
+    };
+    const fit = (t, w) => {
+      if (ctx.measureText(t).width <= w) return t;
+      while (t.length > 1 && ctx.measureText(t + '…').width > w) t = t.slice(0, -1);
+      return t + '…';
+    };
+    const wrap = (t, w) => {
+      const words = String(t).split(/\s+/), lines = []; let cur = '';
+      words.forEach(wd => {
+        const test = cur ? cur + ' ' + wd : wd;
+        if (cur && ctx.measureText(test).width > w) { lines.push(cur); cur = wd; } else cur = test;
+      });
+      if (cur) lines.push(cur);
+      return lines.slice(0, 3);
+    };
+
+    // ---------- latar ----------
+    ctx.fillStyle = '#070b14'; ctx.fillRect(0, 0, W, H);
+    const glow = (cx, cy, rx, ry, col) => {
+      ctx.save(); ctx.translate(cx, cy); ctx.scale(rx / ry, 1);
+      const g = ctx.createRadialGradient(0, 0, 0, 0, 0, ry);
+      g.addColorStop(0, col); g.addColorStop(.6, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g; ctx.fillRect(-ry * 4, -ry * 2, ry * 8, ry * 6); ctx.restore();
+    };
+    glow(W * .12, -H * .02, 1500, 750, 'rgba(61,255,122,.10)');
+    glow(W * .92, 0, 1100, 620, 'rgba(255,200,61,.09)');
+
+    // ---------- header ----------
+    const hg = ctx.createLinearGradient(0, 0, 0, headerH);
+    hg.addColorStop(0, 'rgba(14,21,37,.92)'); hg.addColorStop(1, 'rgba(7,11,20,.25)');
+    ctx.fillStyle = hg; ctx.fillRect(0, 0, W, headerH);
+    ctx.fillStyle = 'rgba(255,255,255,.07)'; ctx.fillRect(0, headerH, W, 1);
+
+    const cx = W / 2; let cy = 36;
+    const logoRowCy = cy + logoH / 2;
+    if (assets.logos.length) {
+      const gap = 16 * HS, items = assets.logos.map(im => {
+        const h = logoH, w = Math.min(im.naturalWidth * h / im.naturalHeight, 340 * HS);
+        return { im, w, h: Math.min(h, w * im.naturalHeight / im.naturalWidth) };
+      });
+      let tot = items.reduce((a, b) => a + b.w, 0) + gap * (items.length - 1), x = cx - tot / 2;
+      items.forEach(it => { ctx.drawImage(it.im, x, logoRowCy - it.h / 2, it.w, it.h); x += it.w + gap; });
+    } else {
+      const fs = 52 * HS, sp = .14 * fs, icon = 42 * HS, gap = 14 * HS, txt = 'PDM CUP 2026';
+      ctx.font = '400 ' + fs + 'px "Bebas Neue", Impact, sans-serif';
+      const tw = spacedW(txt, sp), tot = icon + gap + tw, x0 = cx - tot / 2;
+      ctx.save(); ctx.translate(x0, logoRowCy - icon / 2); ctx.scale(icon / 64, icon / 64);
+      ctx.strokeStyle = '#3dff7a'; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ['M40 40 L12 20', 'M40 40 L20 12', 'M40 40 L27 8', 'M40 40 L8 28'].forEach(d => ctx.stroke(new Path2D(d)));
+      ctx.fillStyle = '#3dff7a'; ctx.beginPath(); ctx.arc(46, 46, 9, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+      const tg = ctx.createLinearGradient(0, logoRowCy - fs / 2, 0, logoRowCy + fs / 2);
+      tg.addColorStop(.1, '#ffffff'); tg.addColorStop(.95, '#ffc83d');
+      ctx.fillStyle = tg; spaced(txt, x0 + icon + gap, logoRowCy + fs * .04, sp, 'left');
+    }
+    cy += logoH + 14;
+
+    ctx.font = '700 ' + (12 * HS) + 'px Montserrat, sans-serif'; ctx.fillStyle = '#3dff7a';
+    spaced('PDM CUP 2026', cx, cy + 11, .5 * 12 * HS, 'center');
+    cy += 22;
+
+    if (hasSp) {
+      cy += 16;
+      const ph = 28 * HS, gap = 10 * HS, padX = 10 * HS, ih = 20 * HS;
+      const items = assets.sponsors.map(im => {
+        const w = Math.min(im.naturalWidth * ih / im.naturalHeight, 110 * HS);
+        return { im, w, h: Math.min(ih, w * im.naturalHeight / im.naturalWidth) };
+      });
+      const tot = items.reduce((a, b) => a + b.w + padX * 2, 0) + gap * (items.length - 1);
+      let x = cx - tot / 2;
+      items.forEach(it => {
+        const pw = it.w + padX * 2;
+        rr(x, cy, pw, ph, 8 * HS); ctx.fillStyle = 'rgba(255,255,255,.93)'; ctx.fill();
+        ctx.drawImage(it.im, x + padX, cy + (ph - it.h) / 2, it.w, it.h);
+        x += pw + gap;
+      });
+    }
+
+    ctx.font = '600 ' + (12 * HS) + 'px Montserrat, sans-serif'; ctx.fillStyle = '#8fa0bb';
+    const dateTxt = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
+    spaced(dateTxt, 48, logoRowCy, .12 * 12 * HS, 'left');
+    const total = Math.max(B.N - 1, 0) + (B.R >= 2 ? 1 : 0);
+    spaced((countDone(B) + ' / ' + total + ' laga selesai').toUpperCase(), W - 48, logoRowCy, .12 * 12 * HS, 'right');
+
+    // ---------- posisi kartu ----------
+    const pos = {};
+    for (let r = 0; r < R - 1; r++) {
+      const arr = B.rounds[r], half = arr.length / 2;
+      arr.forEach(m => {
+        const left = m.i < half, li = left ? m.i : m.i - half;
+        const col = left ? r : 2 * (R - 1) - r;
+        const x = ox + col * (CW + GAP), ccy = oy + TH + (li + .5) * (bodyH / half);
+        pos[r + '-' + m.i] = { x, y: ccy - CARDH / 2, w: CW, h: CARDH, side: left ? 'L' : 'R' };
+      });
+    }
+    const finalX = ox + (R - 1) * (CW + GAP), finalCy = oy + TH + bodyH / 2;
+    const fm = B.rounds[R - 1][0], m3 = B.rounds[R - 1][1];
+    pos[(R - 1) + '-0'] = { x: finalX, y: finalCy - CARDH / 2, w: CW, h: CARDH, side: 'C' };
+    const thirdTitleTop = finalCy + CARDH / 2 + 40;
+    const has3 = !!(m3 && m3.kind !== 'void');
+    if (has3) pos.third = { x: finalX, y: thirdTitleTop + 28 + 12, w: CW, h: CARDH, side: 'C' };
+
+    // ---------- judul kolom ----------
+    ctx.font = '400 26px "Bebas Neue", Impact, sans-serif';
+    for (let r = 0; r < R - 1; r++) {
+      const t = ROUND_FULL[B.size >> r].toUpperCase();
+      ctx.fillStyle = '#3dff7a';
+      spaced(t, ox + r * (CW + GAP) + CW / 2, oy + TH / 2, 3.12, 'center');
+      spaced(t, ox + (2 * (R - 1) - r) * (CW + GAP) + CW / 2, oy + TH / 2, 3.12, 'center');
+    }
+    ctx.fillStyle = '#ffc83d'; spaced('FINAL', finalX + CW / 2, oy + TH / 2, 3.12, 'center');
+    if (has3) { ctx.font = '400 22px "Bebas Neue", Impact, sans-serif'; ctx.fillStyle = '#3dff7a'; spaced('JUARA 3', finalX + CW / 2, thirdTitleTop + 14, 2.64, 'center'); }
+
+    // ---------- garis penghubung ----------
+    const base = [], lit = [];
+    for (let r = 0; r < R - 1; r++) {
+      B.rounds[r].forEach(m => {
+        if (m.kind === 'void') return;
+        const pm = B.rounds[r + 1][m.i >> 1];
+        if (!pm || pm.kind === 'void') return;
+        const c = pos[r + '-' + m.i], p = pos[(r + 1) + '-' + (m.i >> 1)]; if (!c || !p) return;
+        const left = c.side === 'L';
+        const x1 = left ? c.x + c.w : c.x, x2 = left ? p.x : p.x + p.w;
+        const y1 = c.y + c.h / 2, y2 = p.y + p.h / 2, xm = (x1 + x2) / 2;
+        const on = m.winner.type === 'team' && (m.kind === 'done' || m.kind === 'bye');
+        (on ? lit : base).push([x1, y1, xm, y2, x2]);
+      });
+    }
+    const strokeLines = (arr, col, glowCol) => {
+      ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.lineJoin = 'round'; ctx.lineCap = 'butt';
+      if (glowCol) { ctx.shadowColor = glowCol; ctx.shadowBlur = 4 * scale; }
+      arr.forEach(([x1, y1, xm, y2, x2]) => { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(xm, y1); ctx.lineTo(xm, y2); ctx.lineTo(x2, y2); ctx.stroke(); });
+      ctx.restore();
+    };
+    strokeLines(base, 'rgba(148,163,184,.30)');
+    strokeLines(lit, '#3dff7a', 'rgba(61,255,122,.7)');
+
+    // ---------- kartu ----------
+    const drawRow = (t, cls, m, sideIdx, rx, ry, w) => {
+      const rcy = ry + ROWH / 2;
+      ctx.save();
+      if (cls === 'lose') ctx.globalAlpha = .6;
+      if (cls === 'win') {
+        const g = ctx.createLinearGradient(rx, 0, rx + w, 0);
+        g.addColorStop(0, 'rgba(61,255,122,.18)'); g.addColorStop(.88, 'rgba(61,255,122,0)');
+        ctx.fillStyle = g; ctx.fillRect(rx, ry, w, ROWH);
+        ctx.fillStyle = '#3dff7a'; ctx.fillRect(rx, ry, 3, ROWH);
+      }
+      const cellsX = rx + w - 8 - bo * 24 - (bo - 1) * 8;
+      const nameX = rx + 26 + 8, nameW = cellsX - 8 - nameX;
+      if (t.type === 'team') {
+        ctx.font = '600 11px "Barlow Condensed", sans-serif'; ctx.fillStyle = '#7f8ca3'; ctx.textAlign = 'center';
+        ctx.fillText(String(t.seed), rx + 13, rcy);
+        ctx.font = '600 15px "Barlow Condensed", sans-serif'; ctx.textAlign = 'left';
+        ctx.fillStyle = cls === 'win' ? '#ffffff' : cls === 'adv' ? '#b9f5cf' : '#dbe4f3';
+        const parts = splitName(t.name);
+        if (parts.length === 2) { ctx.fillText(fit(parts[0], nameW), nameX, rcy - 8); ctx.fillText(fit(parts[1], nameW), nameX, rcy + 8); }
+        else ctx.fillText(fit(parts[0], nameW), nameX, rcy);
+      } else {
+        ctx.font = 'italic 500 15px "Barlow Condensed", sans-serif'; ctx.fillStyle = '#5d6b84'; ctx.textAlign = 'left';
+        ctx.fillText(t.type === 'bye' ? 'BYE' : 'Menunggu pemenang', nameX, rcy);
+      }
+      for (let k = 0; k < bo; k++) {
+        const g = m.g[k];
+        if (!(g && (g[0] != null || g[1] != null))) continue;
+        const val = g[sideIdx] != null ? g[sideIdx] : 0;
+        const isWin = g[0] != null && g[1] != null && g[sideIdx] > g[1 - sideIdx];
+        let col = '#8d9bb3', wt = 600;
+        if (isWin) { col = '#3dff7a'; wt = 700; }
+        if (cls === 'win' && isWin) col = '#7dffa8';
+        if (cls === 'lose') col = '#7d8aa1';
+        ctx.font = wt + ' 17px "Barlow Condensed", sans-serif'; ctx.fillStyle = col; ctx.textAlign = 'center';
+        ctx.fillText(String(val), cellsX + k * 32 + 12, rcy);
+      }
+      ctx.restore();
+    };
+
+    const drawCard = (m, p) => {
+      if (m.kind === 'void') return;
+      const isFinal = m.r === R - 1 && !m.isThird;
+      let ca = '', cb = '';
+      if (m.kind === 'done') { const aw = m.winner.seed === m.a.seed; ca = aw ? 'win' : 'lose'; cb = aw ? 'lose' : 'win'; }
+      else if (m.kind === 'bye') { ca = m.a.type === 'team' ? 'adv' : ''; cb = m.b.type === 'team' ? 'adv' : ''; }
+      const ready = m.kind === 'ready' && !isFinal;
+      const border = isFinal ? 'rgba(255,200,61,.6)' : ready ? 'rgba(255,200,61,.7)' : 'rgba(148,163,184,.22)';
+
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = 18 * scale; ctx.shadowOffsetY = 6 * scale;
+      rr(p.x, p.y, p.w, p.h, 10);
+      const g = ctx.createLinearGradient(0, p.y, 0, p.y + p.h); g.addColorStop(0, '#131c32'); g.addColorStop(1, '#0d1424');
+      ctx.fillStyle = g; ctx.fill(); ctx.restore();
+      if (ready) { ctx.save(); ctx.shadowColor = 'rgba(255,200,61,.35)'; ctx.shadowBlur = 22 * scale; rr(p.x, p.y, p.w, p.h, 10); ctx.strokeStyle = 'rgba(255,200,61,.5)'; ctx.lineWidth = 1; ctx.stroke(); ctx.restore(); }
+
+      ctx.save(); rr(p.x, p.y, p.w, p.h, 10); ctx.clip();
+      const rx = p.x + 1, rw = p.w - 2;
+      drawRow(m.a, ca, m, 0, rx, p.y + 1, rw);
+      drawRow(m.b, cb, m, 1, rx, p.y + 1 + ROWH + 1, rw);
+      ctx.fillStyle = 'rgba(148,163,184,.14)'; ctx.fillRect(rx, p.y + 1 + ROWH, rw, 1);
+      ctx.restore();
+
+      rr(p.x + .5, p.y + .5, p.w - 1, p.h - 1, 10); ctx.strokeStyle = border; ctx.lineWidth = 1; ctx.stroke();
+    };
+    const drawTime = (m, p) => {
+      if (!m.time || m.kind === 'bye' || m.kind === 'void') return;
+      ctx.font = '600 11px Montserrat, sans-serif'; ctx.textAlign = 'left';
+      const label = String(m.time), tw = ctx.measureText(label).width, bw = tw + 16 + 2, bh = 22;
+      let bx, by;
+      if (p.side === 'L') { bx = p.x + p.w + 35 - bw / 2; by = p.y + p.h / 2 - bh / 2; }
+      else if (p.side === 'R') { bx = p.x - 35 - bw / 2; by = p.y + p.h / 2 - bh / 2; }
+      else { bx = p.x + p.w / 2 - bw / 2; by = p.y - 14; }
+      ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 8 * scale; ctx.shadowOffsetY = 2 * scale;
+      rr(bx, by, bw, bh, 4); ctx.fillStyle = '#0e1525'; ctx.fill(); ctx.restore();
+      rr(bx + .5, by + .5, bw - 1, bh - 1, 4); ctx.strokeStyle = 'rgba(61,255,122,.4)'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.fillStyle = '#3dff7a'; ctx.fillText(label, bx + 9, by + bh / 2 + .5);
+    };
+
+    for (let r = 0; r < R - 1; r++) B.rounds[r].forEach(m => { const p = pos[r + '-' + m.i]; if (p) drawCard(m, p); });
+    drawCard(fm, pos[(R - 1) + '-0']);
+    if (has3) drawCard(m3, pos.third);
+    for (let r = 0; r < R - 1; r++) B.rounds[r].forEach(m => { const p = pos[r + '-' + m.i]; if (p) drawTime(m, p); });
+    drawTime(fm, pos[(R - 1) + '-0']);
+    if (has3) drawTime(m3, pos.third);
+
+    // ---------- juara ----------
+    {
+      const fp = pos[(R - 1) + '-0'];
+      const yb = fp.y - 27;
+      const name = B.champ ? B.champ.name : '—';
+      ctx.font = '700 22px "Barlow Condensed", sans-serif';
+      const lines = wrap(name, CW + 30), nameH = lines.length * 24, nameTop = yb - nameH;
+      ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center';
+      if (B.champ) { ctx.save(); ctx.shadowColor = 'rgba(255,200,61,.55)'; ctx.shadowBlur = 18 * scale; }
+      lines.forEach((ln, i) => ctx.fillText(ln, finalX + CW / 2, nameTop + 12 + i * 24));
+      if (B.champ) ctx.restore();
+      ctx.font = '400 18px "Bebas Neue", Impact, sans-serif'; ctx.fillStyle = '#ffc83d';
+      spaced('JUARA', finalX + CW / 2, nameTop - 12, .35 * 18, 'center');
+      ctx.save();
+      ctx.font = '54px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; ctx.textAlign = 'center';
+      const ty = nameTop - 24 - 30;
+      if (B.champ) { ctx.shadowColor = 'rgba(255,200,61,.85)'; ctx.shadowBlur = 18 * scale; }
+      else if ('filter' in ctx) ctx.filter = 'grayscale(1) opacity(.35)';
+      else ctx.globalAlpha = .3;
+      ctx.fillText('🏆', finalX + CW / 2, ty);
+      ctx.restore();
+    }
+
+    // ---------- footer ----------
+    ctx.font = '600 14px Montserrat, sans-serif'; ctx.fillStyle = '#5d6b84';
+    spaced('PDM CUP 2026  •  BAGAN ' + B.size + ' BESAR', W / 2, H - 34, 2.8, 'center');
+
+    return { canvas: cv, W, H };
+  }
+
+  // Fitur Download Bagan HD
+  $('#btnDownloadHD').onclick = async () => {
+    const btn = $('#btnDownloadHD'), label = btn.textContent;
+    const B = computeBracket(state);
+    if (!B.N) { toast('Belum ada tim terdaftar', 'err'); return; }
+    btn.disabled = true; btn.textContent = 'Membuat gambar…';
+    toast('Sedang membuat gambar HD...', 'warn');
+    try {
+      // pastikan font sudah termuat sebelum menggambar
+      try {
+        await Promise.all([
+          document.fonts.load('400 52px "Bebas Neue"'), document.fonts.load('400 26px "Bebas Neue"'),
+          document.fonts.load('500 15px "Barlow Condensed"'), document.fonts.load('600 15px "Barlow Condensed"'),
+          document.fonts.load('700 20px "Barlow Condensed"'),
+          document.fonts.load('600 12px Montserrat'), document.fonts.load('700 12px Montserrat')
+        ]);
+        await document.fonts.ready;
+      } catch (e) { /* lanjut dengan font cadangan */ }
+
+      const logoUrls = state.eventLogos.filter(Boolean), spUrls = state.sponsors.filter(Boolean);
+      const [logos, sponsors] = await Promise.all([
+        Promise.all(logoUrls.map(dlLoadImage)), Promise.all(spUrls.map(dlLoadImage))
+      ]);
+      const assets = { logos: logos.filter(Boolean), sponsors: sponsors.filter(Boolean) };
+      const failed = (logoUrls.length - assets.logos.length) + (spUrls.length - assets.sponsors.length);
+
+      // batasi ukuran kanvas agar aman di perangkat (terutama HP)
+      const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform));
+      const maxArea = mobile ? 16e6 : 120e6, maxSide = 16000;
+      const M = dlMeasure(B, assets.sponsors.length > 0);
+      let scale = +($('#selDlScale') ? $('#selDlScale').value : 2) || 2;
+      while (scale > .5 && (M.W * scale * M.H * scale > maxArea || M.W * scale > maxSide || M.H * scale > maxSide)) scale -= .25;
+
+      let blob = null, out = null;
+      for (let attempt = 0; attempt < 4 && !blob; attempt++) {
+        out = dlRender(B, assets, scale);
+        blob = await new Promise(res => { try { out.canvas.toBlob(res, 'image/png'); } catch (e) { res(null); } });
+        if (!blob) { out.canvas.width = out.canvas.height = 0; scale *= .75; }
+      }
+      if (!blob) throw new Error('Kanvas terlalu besar untuk perangkat ini');
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'Bagan_PDM_CUP_2026_' + B.size + '_Besar.png';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 15000);
+      const px = out.canvas.width + '×' + out.canvas.height + ' px';
+      out.canvas.width = out.canvas.height = 0;
+      if (failed) toast('Bagan terunduh (' + px + '), tetapi ' + failed + ' gambar logo/sponsor gagal dimuat (server gambar tidak mengizinkan CORS)', 'warn');
+      else toast('Berhasil mengunduh Bagan HD (' + px + ')', 'ok');
+    } catch (err) {
+      console.error(err);
+      toast('Gagal mengunduh gambar: ' + (err && err.message ? err.message : 'kesalahan tidak diketahui'), 'err');
+    } finally {
+      btn.disabled = false; btn.textContent = label;
+    }
+  };
 
   const grid = $('#matchGrid');
   let inputSaveTimer; 
@@ -987,7 +1342,7 @@ function tvCard(m, side, B) {
 function renderTV() {
   const B = curB = computeBracket(state);
   if (state.tvFocus !== 'full' && state.tvFocus >= B.R) state.tvFocus = 'full';
-  renderHeader(B); buildStage(B); buildBar(B); updateHud();
+  renderHeader(B); buildStage(B); buildBar(B); 
   $('#emptyMsg').classList.toggle('is-hidden', B.N > 0);
   requestAnimationFrame(() => { drawLines(B); applyFocus(false); });
 }
@@ -1020,14 +1375,13 @@ function buildStage(B) {
   
   for (let r = 0; r < R - 1; r++) html += col(r, 'L', rounds[r].slice(0, rounds[r].length / 2));
   
-  const fm = rounds[R - 1][0]; // Final
-  const m3 = rounds[R - 1][1]; // Juara 3 (jika ada)
+  const fm = rounds[R - 1][0]; 
+  const m3 = rounds[R - 1][1]; 
   
-  // Menggunakan Grid 3 baris untuk menempatkan Final tepat di tengah vertical
   let centerHtml = '<div class="col center" data-round="' + (R - 1) + '">' +
     '<div class="col-title" data-round="' + (R - 1) + '">Final</div>' +
     '<div class="col-body" style="display:grid; grid-template-rows: 1fr auto 1fr; justify-items:center; align-items:center;">' +
-      '<div></div>' + // Spacer Atas
+      '<div></div>' + 
       '<div class="slot final-slot" style="width:100%;">' +
         '<div class="champ ' + (B.champ ? 'has' : '') + '" data-round="' + (R - 1) + '"><div class="trophy">🏆</div><div class="cl">JUARA</div><div class="cn">' + (B.champ ? esc(B.champ.name) : '—') + '</div></div>' +
         tvCard(fm, 'C', B) + 
@@ -1039,7 +1393,7 @@ function buildStage(B) {
         '<div style="position:relative;">' + tvCard(m3, 'C', B) + '</div>' +
         '</div>';
   } else {
-      centerHtml += '<div></div>'; // Spacer Bawah jika tidak ada Juara 3
+      centerHtml += '<div></div>';
   }
   
   centerHtml += '</div></div>';
@@ -1104,15 +1458,10 @@ function applyFocus(animate) {
   $$('#lines path', stage).forEach(p => { const r = +p.dataset.r; p.classList.toggle('dim', focus !== 'full' && !(r === focus || r + 1 === focus)); });
 }
 
-function updateHud() {
-  const h = $('#hud');
-  if (state.tvFocus !== 'full' && curB) $('b', h).textContent = ROUND_FULL[curB.size >> state.tvFocus];
-  h.classList.toggle('show', state.tvFocus !== 'full');
-}
 function updateBar() { $$('#bar [data-focus]').forEach(b => b.classList.toggle('active', b.dataset.focus === String(state.tvFocus))); }
 function focusOn(id, user) {
   if (user !== false) stopTour();
-  state.tvFocus = id; updateBar(); updateHud(); applyFocus(true);
+  state.tvFocus = id; updateBar(); applyFocus(true);
   if(user !== false && mode === 'tv') save(); 
 }
 
