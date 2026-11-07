@@ -62,6 +62,16 @@
   #mTitle{font:600 12px Montserrat;color:#cfd8ea;max-width:340px;text-align:center}
   #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:#15104a;border:1px solid var(--neon);color:#e6edf7;padding:10px 16px;border-radius:10px;font:600 12px Montserrat;opacity:0;pointer-events:none;transition:.25s;z-index:60}
   #toast.show{opacity:1;transform:translateX(-50%)}
+  .tm{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px}
+  .tin{flex:1;min-width:0;background:#0a0722;border:1px solid var(--line);color:#e6edf7;border-radius:8px;padding:7px 8px;font:500 11px Montserrat;color-scheme:dark}
+  .tin[data-k=t]{flex:1 1 100%}
+  .tin[data-k=c]{flex:1 1 100%}
+  .bulk{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:14px;padding:0 14px}
+  .bulk summary{cursor:pointer;padding:11px 0;font:700 12px Montserrat;color:#cdd5ff}
+  .bulk-b{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;padding:2px 0 14px}
+  .bulk-b label{display:flex;flex-direction:column;gap:5px;font:600 11px Montserrat;color:var(--mut)}
+  .bulk-b .tin{flex:none;width:190px;font-size:12px}
+  .bulk-b .tin.n{width:88px}
   .tip{margin-top:30px;font-size:11.5px;color:var(--mut);line-height:1.7;border-top:1px solid var(--line);padding-top:14px}
 </style>
 </head>
@@ -96,11 +106,20 @@
       <button class="btn sm" id="dlAllMatch">⬇ Unduh semua yang tampil</button>
     </div>
     <div class="filters" id="filters"></div>
+    <details class="bulk"><summary>⏱ Atur jadwal massal (opsional)</summary>
+      <div class="bulk-b">
+        <label>Mulai<input type="datetime-local" class="tin" id="bkStart"></label>
+        <label>Jeda antar match (menit)<input type="number" class="tin n" id="bkGap" value="40" min="5"></label>
+        <label>Jumlah lapangan<input type="number" class="tin n" id="bkCourts" value="1" min="1" max="12"></label>
+        <button class="btn pri sm" id="bkApply">Terapkan ke yang tampil</button>
+        <button class="btn sm" id="bkClear">Hapus jadwal yang tampil</button>
+      </div>
+    </details>
     <div class="grid" id="gridMatch"></div>
   </section>
 
   <div class="tip">
-    Ketuk poster untuk pratinjau besar. Ukuran file 1080 px (siap unggah ke Instagram). Poster mengikuti data bagan secara otomatis,
+    Isi tanggal, jam, dan lapangan di bawah tiap poster pertandingan (atau pakai “Atur jadwal massal”); jadwal tersimpan di perangkat ini dan tampil di poster. Ketuk poster untuk pratinjau besar. Ukuran file 1080 px (siap unggah ke Instagram). Poster mengikuti data bagan secara otomatis,
     jadi setelah skor diperbarui di halaman Admin, tekan “Muat ulang data” lalu unduh ulang.
   </div>
 </div>
@@ -509,11 +528,25 @@ function drawTeamCard(c, x, y, w, h, team, sets, st, cap) {
   c.restore();
 }
 
+function timeText(r, i) {
+  const d = TIMES[r + '-' + i]; if (!d) return ''; const out = [];
+  if (d.t) {
+    const dt = new Date(d.t);
+    if (!isNaN(dt)) out.push(dt.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + '  •  ' + dt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false }).replace(':', '.') + ' WIB');
+  }
+  if (d.c && String(d.c).trim()) out.push('LAPANGAN ' + String(d.c).trim().toUpperCase());
+  return out.join('  •  ');
+}
+function clockIcon(c, cx, cy, r, col) {
+  c.save(); c.strokeStyle = col; c.lineWidth = r * 0.17; c.lineCap = 'round';
+  c.beginPath(); c.arc(cx, cy, r, 0, Math.PI * 2); c.stroke();
+  c.beginPath(); c.moveTo(cx, cy - r * 0.55); c.lineTo(cx, cy); c.lineTo(cx + r * 0.42, cy + r * 0.25); c.stroke(); c.restore();
+}
 function drawMatchPoster(c, spec) {
   const f = FMT[fmt], H = f.H, top = f.top, bot = f.bot, m = B.rounds[spec.r][spec.i];
   drawBase(c, H); drawFooter(c, H, bot);
   drawHeader(c, top, roundPill(B.size >> m.r) + '  •  MATCH ' + pad2(m.no));
-  const y0 = top + 484, y1 = H - bot - 190, Hc = y1 - y0, UH = 690, k = Math.min(1.25, Hc / UH), uw = 940 / k;
+  const y0 = top + 484, y1 = H - bot - 190, Hc = y1 - y0, tt = timeText(m.r, m.i), off = tt ? 50 : 0, UH = 690 + off, k = Math.min(1.25, Hc / UH), uw = 940 / k;
   const by = y0 + (Hc - UH * k) / 2;
   c.save(); c.translate(70, by); c.scale(k, k);
   const played = []; for (let q = 0; q < S.bestOf; q++) if (gPlayed(m.g[q])) played.push(q);
@@ -531,6 +564,12 @@ function drawMatchPoster(c, spec) {
   c.fillStyle = done ? '#6dffb0' : live ? '#ff9d9d' : '#dfe8f3';
   spaced(c, stTxt, uw / 2 + (live ? 12 : 0), 21, 5, 'center');
   if (live) { c.beginPath(); c.arc(uw / 2 - sw / 2 + 24, 20, 6, 0, 7); c.fillStyle = '#ff5b5b'; c.shadowColor = '#ff5b5b'; c.shadowBlur = 12; c.fill(); c.shadowBlur = 0; c.shadowColor = 'transparent'; }
+  if (tt) {
+    c.save(); c.textBaseline = 'middle'; const fs = fit(c, tt, uw - 90, 29, 700, F.cond, 16); c.font = fnt(700, fs, F.cond);
+    const tw = c.measureText(tt).width, x0 = uw / 2 - (tw + 38) / 2; clockIcon(c, x0 + 12, 72, 12, C.gold);
+    c.fillStyle = '#fff'; c.textAlign = 'left'; c.fillText(tt, x0 + 38, 73); c.restore();
+  }
+  c.translate(0, off);
   // kartu tim
   const aW = done && m.winner.seed === m.a.seed, bW = done && m.winner.seed === m.b.seed;
   const stA = decided ? (aW ? 'win' : 'lose') : 'neu', stB = decided ? (bW ? 'win' : 'lose') : 'neu';
@@ -663,6 +702,9 @@ function paint(canvas, spec, pxW) {
 // =====================================================================
 // DATA & ANTARMUKA
 // =====================================================================
+const TKEY = 'pdmcup2026_poster_times';
+let TIMES = {}; try { TIMES = JSON.parse(localStorage.getItem(TKEY) || '{}') || {}; } catch (e) { TIMES = {}; }
+function saveTimes() { try { localStorage.setItem(TKEY, JSON.stringify(TIMES)); } catch (e) {} }
 let S = null, B = null, lastRaw = null, dataSrc = 'demo', lastSync = null, fmt = 'feed';
 let specsB = [], specsM = [], flt = { round: 'all', scope: 'score' }, shown = [], modalIdx = -1;
 try { const f = localStorage.getItem('pdmcup2026_poster_fmt'); if (f && FMT[f]) fmt = f; } catch (e) {}
@@ -736,8 +778,15 @@ const BADGE = { done: ['done', 'Selesai'], partial: ['partial', 'Sebagian selesa
 function cardEl(spec) {
   const el = document.createElement('article'); el.className = 'pc';
   const [bc, bt] = BADGE[spec.status];
-  el.innerHTML = '<button class="thumb" aria-label="Pratinjau"><canvas></canvas></button><div class="meta"><div class="t">' + esc(spec.label) + '</div><div class="s">' + esc(spec.sub) + '</div><span class="badge ' + bc + '">' + bt + '</span></div><button class="btn pri">⬇ Unduh PNG</button>';
+  el.innerHTML = '<button class="thumb" aria-label="Pratinjau"><canvas></canvas></button><div class="meta"><div class="t">' + esc(spec.label) + '</div><div class="s">' + esc(spec.sub) + '</div><span class="badge ' + bc + '">' + bt + '</span></div>' + (spec.type === 'match' ? '<div class="tm"><input type="datetime-local" class="tin" data-k="t" title="Tanggal & jam"><input type="text" class="tin" data-k="c" placeholder="Lapangan" maxlength="12"></div>' : '') + '<button class="btn pri">⬇ Unduh PNG</button>';
   const cv = el.querySelector('canvas'); cv._spec = spec; cv.width = 360; cv.height = Math.round(360 * FMT[fmt].H / W);
+  if (spec.type === 'match') {
+    const key = spec.r + '-' + spec.i, cur = TIMES[key] || {};
+    el.querySelectorAll('.tin').forEach(inp => {
+      inp.value = cur[inp.dataset.k] || '';
+      inp.oninput = () => { const d = TIMES[key] || (TIMES[key] = {}); d[inp.dataset.k] = inp.value; if (!d.t && !d.c) delete TIMES[key]; saveTimes(); fontsReady.then(() => paint(cv, spec, 360)); };
+    });
+  }
   el.querySelector('.thumb').onclick = () => openModal(spec);
   el.querySelector('.btn').onclick = () => download(spec);
   io ? io.observe(cv) : fontsReady.then(() => paint(cv, spec, 360));
@@ -806,6 +855,14 @@ $('#fmtSeg').querySelectorAll('button').forEach(b => {
 $('#btnReload').onclick = async function () { this.disabled = true; await sync(true); this.disabled = false; };
 $('#dlAllBracket').onclick = function () { downloadAll(specsB, this); };
 $('#dlAllMatch').onclick = function () { downloadAll(shown, this); };
+const loc = d => d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) + 'T' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+$('#bkApply').onclick = () => {
+  const st = new Date($('#bkStart').value); if (isNaN(st)) return toast('Isi tanggal & jam mulai dulu');
+  const gap = Math.max(1, +$('#bkGap').value || 40), courts = Math.max(1, +$('#bkCourts').value || 1);
+  shown.forEach((sp, idx) => { const d = new Date(st.getTime() + Math.floor(idx / courts) * gap * 60000); TIMES[sp.r + '-' + sp.i] = { t: loc(d), c: courts > 1 ? String(idx % courts + 1) : (TIMES[sp.r + '-' + sp.i] || {}).c || '' }; });
+  saveTimes(); renderMatches(); toast('Jadwal diterapkan ke ' + shown.length + ' pertandingan');
+};
+$('#bkClear').onclick = () => { shown.forEach(sp => delete TIMES[sp.r + '-' + sp.i]); saveTimes(); renderMatches(); toast('Jadwal dihapus'); };
 $('#mClose').onclick = closeModal; $('#mPrev').onclick = () => stepModal(-1); $('#mNext').onclick = () => stepModal(1);
 $('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
 document.addEventListener('keydown', e => { if ($('#modal').hidden) return; if (e.key === 'Escape') closeModal(); if (e.key === 'ArrowLeft') stepModal(-1); if (e.key === 'ArrowRight') stepModal(1); });
