@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PDM Cup 2026 – Bracket Peserta</title>
 
 <!-- Font -->
@@ -26,16 +26,15 @@
   /* ================= VARIABEL & BASE ================= */
   :root{
     --ink:#070b14; --neon:#3dff7a; --gold:#ffc83d;
-    --cw:240px;        /* Lebar kartu dioptimalkan untuk mobile */
-    --rowh:34px;       /* Tinggi baris tim sedikit dikecilkan */
-    --colgap:70px;     /* Garis penghubung diperpanjang agar jam muat sempurna */
+    --cw:240px;        
+    --rowh:34px;       
+    --colgap:70px;     
   }
   html,body{margin:0;background:var(--ink);color:#e6edf7;font-family:Montserrat,sans-serif;height:100%;overflow:hidden;}
   body{
     background: radial-gradient(800px 500px at 50% 0%, rgba(61,255,122,.08), transparent 70%), #070b14;
   }
   
-  /* Sembunyikan scrollbar tapi tetap bisa di-scroll */
   .scrollbar-hide::-webkit-scrollbar { display: none; }
   .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -60,9 +59,11 @@
   .sp { height: 20px; padding: 0 8px; border-radius: 4px; background: rgba(255,255,255,.93); display: flex; align-items: center; }
   .sp img { height: 14px; max-width: 80px; object-fit: contain; }
 
-  /* ================= BRACKET STAGE (MOBILE SCROLL) ================= */
+  /* ================= BRACKET STAGE ================= */
   #viewport { position: relative; flex: 1; overflow: auto; width: 100%; -webkit-overflow-scrolling: touch; cursor: grab; }
   #viewport:active { cursor: grabbing; }
+  
+  #zoomWrapper { transform-origin: 0 0; transition: transform 0.2s ease-out; }
   
   #stage { 
     position: relative; display: flex; gap: var(--colgap); padding: 30px 40px; 
@@ -83,13 +84,11 @@
   .slot { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; }
   .final-slot { position: relative; }
 
-  /* Badge Jam diletakkan persis di tengah garis SVG, di luar kotak mcard */
   .match-time { position: absolute; top: 50%; background: #0e1525; border: 1px solid rgba(61,255,122,.4); color: var(--neon); font: 600 11px Montserrat; padding: 2px 8px; border-radius: 4px; z-index: 5; box-shadow: 0 2px 8px rgba(0,0,0,.5); white-space: nowrap; }
   .col[data-side="L"] .match-time { right: -35px; transform: translate(50%, -50%); }
   .col[data-side="R"] .match-time { left: -35px; transform: translate(-50%, -50%); }
   .col.center .match-time { top: -14px; left: 50%; transform: translateX(-50%); }
 
-  /* Card UI (Mobile Tweaks) */
   .mcard { 
     position: relative; width: var(--cw); border-radius: 10px; overflow: hidden; 
     background: linear-gradient(180deg,#131c32,#0d1424); border: 1px solid rgba(148,163,184,.22); 
@@ -123,7 +122,6 @@
   .champ .cl { font: 400 16px 'Bebas Neue',sans-serif; letter-spacing: .2em; color: var(--gold); }
   .champ .cn { font: 700 18px/1.1 'Barlow Condensed',sans-serif; color: #fff; text-shadow: 0 0 10px rgba(0,0,0,0.8); }
 
-  /* Instruksi Swipe */
   #swipeHint {
     position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
     background: rgba(14,21,37,.85); border: 1px solid rgba(255,255,255,.1); padding: 8px 16px;
@@ -133,7 +131,6 @@
   }
   #swipeHint.fade { opacity: 0; }
 
-  /* Loading */
   #loadingScreen { position: fixed; inset: 0; background: #070b14; z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; transition: opacity 0.5s; }
   #loadingScreen.hide { opacity: 0; pointer-events: none; }
   .spinner { width: 32px; height: 32px; border: 3px solid rgba(61,255,122,.2); border-top-color: var(--neon); border-radius: 50%; animation: spin 1s linear infinite; }
@@ -154,11 +151,21 @@
 </header>
 
 <main id="viewport" class="scrollbar-hide">
-  <div id="stage"></div>
-  <svg id="lines"></svg>
+  <!-- Wrapper khusus untuk menampung stage & memfasilitasi Zoom Buttons -->
+  <div id="zoomWrapper">
+    <div id="stage"></div>
+    <svg id="lines"></svg>
+  </div>
 </main>
 
-<div id="swipeHint">Geser layar untuk melihat bracket ➔</div>
+<!-- Tombol Zoom Melayang -->
+<div id="zoomUI" style="position:fixed; bottom:24px; right:24px; z-index:100; display:flex; flex-direction:column; gap:10px;">
+  <button onclick="setZoom(0.25)" style="width:42px; height:42px; border-radius:50%; background:rgba(14,21,37,.92); border:1px solid var(--neon); color:var(--neon); font-size:24px; display:grid; place-items:center; box-shadow:0 4px 12px rgba(0,0,0,0.6); backdrop-filter:blur(4px);">+</button>
+  <button onclick="setZoom(-0.25)" style="width:42px; height:42px; border-radius:50%; background:rgba(14,21,37,.92); border:1px solid var(--neon); color:var(--neon); font-size:24px; display:grid; place-items:center; box-shadow:0 4px 12px rgba(0,0,0,0.6); backdrop-filter:blur(4px);">-</button>
+  <button onclick="resetZoom()" style="width:42px; height:42px; border-radius:50%; background:rgba(14,21,37,.92); border:1px solid var(--neon); color:var(--neon); font-size:12px; font-weight:bold; display:grid; place-items:center; box-shadow:0 4px 12px rgba(0,0,0,0.6); backdrop-filter:blur(4px);">100%</button>
+</div>
+
+<div id="swipeHint">Geser layar & cubit untuk zoom ➔</div>
 
 <script>
 // =====================================================================
@@ -199,7 +206,6 @@ function gameValid(a, b, T) {
 function evalMatch(g, s, targetPts) {
   const need = Math.floor(s.bestOf / 2) + 1;
   let wa = 0, wb = 0, valid = true;
-  
   for (let k = 0; k < s.bestOf; k++) {
     const x = g && g[k], fa = x && x[0] != null, fb = x && x[1] != null;
     if (!fa && !fb) continue;
@@ -270,6 +276,26 @@ async function fetchServerState() {
   try { const res = await fetch(API_URL); const json = await res.json(); return json.data; } catch(e) {} return null;
 }
 
+// LOGIKA ZOOM
+let currentZoom = 1;
+window.setZoom = function(delta) {
+  currentZoom = Math.max(0.25, Math.min(2.5, currentZoom + delta));
+  applyZoom();
+};
+window.resetZoom = function() {
+  currentZoom = 1;
+  applyZoom();
+};
+function applyZoom() {
+  const zw = $('#zoomWrapper');
+  const st = $('#stage');
+  if(zw && st) {
+    zw.style.transform = `scale(${currentZoom})`;
+    zw.style.width = (st.scrollWidth * currentZoom) + 'px';
+    zw.style.height = (st.scrollHeight * currentZoom) + 'px';
+  }
+}
+
 function renderUI() {
   if (!state || !state.teams || state.teams.length === 0) {
     $('#stage').innerHTML = '<div class="w-full text-center text-slate-400 mt-20">Belum ada tim terdaftar.</div>';
@@ -279,7 +305,10 @@ function renderUI() {
   const B = computeBracket(state);
   renderHeader(B);
   buildStage(B);
-  requestAnimationFrame(() => drawLines(B));
+  requestAnimationFrame(() => { 
+    drawLines(B);
+    applyZoom(); 
+  });
   
   if(firstRender) {
     firstRender = false;
@@ -359,11 +388,10 @@ function buildStage(B) {
   const fm = rounds[R - 1][0]; 
   const m3 = rounds[R - 1][1]; 
   
-  // Menggunakan Grid 3 baris untuk menempatkan Final tepat di tengah vertical
   let centerHtml = '<div class="col center" data-round="' + (R - 1) + '">' +
     '<div class="col-title">Final</div>' +
     '<div class="col-body" style="display:grid; grid-template-rows: 1fr auto 1fr; justify-items:center; align-items:center;">' +
-      '<div></div>' + // Spacer Atas
+      '<div></div>' + 
       '<div class="slot final-slot" style="width:100%;">' +
         '<div class="champ ' + (B.champ ? 'has' : '') + '"><div class="trophy">🏆</div><div class="cl">JUARA</div><div class="cn">' + (B.champ ? esc(B.champ.name) : '—') + '</div></div>' +
         tvCard(fm, 'C', B) + 
@@ -375,7 +403,7 @@ function buildStage(B) {
         '<div style="position:relative;">' + tvCard(m3, 'C', B) + '</div>' +
         '</div>';
   } else {
-      centerHtml += '<div></div>'; // Spacer Bawah jika tidak ada Juara 3
+      centerHtml += '<div></div>'; 
   }
   
   centerHtml += '</div></div>';
@@ -432,7 +460,7 @@ function scrollToActiveRound(B) {
   const targetCol = $(`[data-round="${activeR}"][data-side="L"]`) || $(`[data-round="${activeR}"]`);
   if(targetCol) {
     const viewport = $('#viewport');
-    const scrollPos = targetCol.offsetLeft - (viewport.clientWidth / 2) + (targetCol.offsetWidth / 2);
+    const scrollPos = (targetCol.offsetLeft * currentZoom) - (viewport.clientWidth / 2) + ((targetCol.offsetWidth * currentZoom) / 2);
     viewport.scrollTo({ left: Math.max(0, scrollPos), behavior: 'smooth' });
   }
 }
@@ -460,7 +488,10 @@ pollServer().then(() => {
 });
 
 window.addEventListener('resize', () => {
-  if (state && state.teams && state.teams.length) drawLines(computeBracket(state));
+  if (state && state.teams && state.teams.length) {
+    drawLines(computeBracket(state));
+    applyZoom();
+  }
 });
 
 })();
