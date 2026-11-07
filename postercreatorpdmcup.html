@@ -8,10 +8,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@500;600;700;800&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root{--ink:#070b14;--panel:#0e1525;--panel2:#131c31;--neon:#3dff7a;--gold:#ffc83d;--line:rgba(255,255,255,.09);--mut:#8b98b0}
+  :root{--ink:#0a0722;--panel:#15104a;--panel2:#1b1660;--neon:#9b8cff;--gold:#ffc83d;--line:rgba(255,255,255,.09);--mut:#8b98b0}
   *{box-sizing:border-box}
   html,body{margin:0}
-  body{background:radial-gradient(900px 520px at 50% -8%,rgba(61,255,122,.10),transparent 70%),var(--ink);color:#e6edf7;font-family:Montserrat,system-ui,sans-serif;min-height:100vh}
+  body{background:radial-gradient(900px 520px at 50% -8%,rgba(155,140,255,.10),transparent 70%),var(--ink);color:#e6edf7;font-family:Montserrat,system-ui,sans-serif;min-height:100vh}
   .wrap{max-width:1280px;margin:0 auto;padding:16px 16px 60px}
   header.top{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;padding:10px 0 14px;border-bottom:1px solid var(--line)}
   .brand{display:flex;align-items:center;gap:12px}
@@ -21,10 +21,10 @@
   .ctrls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
   .seg{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px}
   .seg button{background:none;border:0;color:var(--mut);font:600 12px Montserrat;padding:8px 12px;border-radius:8px;cursor:pointer}
-  .seg button.on{background:var(--neon);color:#04210f}
+  .seg button.on{background:var(--neon);color:#0b0830}
   .btn{background:var(--panel2);color:#e6edf7;border:1px solid var(--line);border-radius:10px;padding:9px 14px;font:600 12px Montserrat;cursor:pointer;transition:.15s}
-  .btn:hover{border-color:rgba(61,255,122,.5)}
-  .btn.pri{background:linear-gradient(180deg,#58ff8d,#27d85f);color:#04210f;border-color:transparent}
+  .btn:hover{border-color:rgba(155,140,255,.5)}
+  .btn.pri{background:linear-gradient(180deg,#a99bff,#5b6dff);color:#0b0830;border-color:transparent}
   .btn.pri:hover{filter:brightness(1.08)}
   .btn.sm{padding:7px 11px;font-size:11px}
   .btn:disabled{opacity:.5;cursor:wait}
@@ -39,28 +39,28 @@
   .sec-h h2 small{font:500 12px Montserrat;color:var(--mut);letter-spacing:0;margin-left:8px}
   .filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;align-items:center}
   .chip{background:var(--panel);border:1px solid var(--line);color:#b9c4d9;border-radius:99px;padding:7px 13px;font:600 12px Montserrat;cursor:pointer}
-  .chip.active{background:rgba(61,255,122,.14);border-color:var(--neon);color:var(--neon)}
+  .chip.active{background:rgba(155,140,255,.14);border-color:var(--neon);color:var(--neon)}
   .fsep{width:1px;height:22px;background:var(--line);margin:0 4px}
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(235px,1fr));gap:14px}
   .pc{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
-  .thumb{display:block;padding:0;border:0;background:#031418;cursor:zoom-in;width:100%}
+  .thumb{display:block;padding:0;border:0;background:#0a0824;cursor:zoom-in;width:100%}
   .thumb canvas{display:block;width:100%;height:auto}
   .meta{padding:11px 12px 6px}
   .meta .t{font:700 13px Montserrat;color:#fff;letter-spacing:.02em}
   .meta .s{font-size:11.5px;color:var(--mut);margin-top:4px;line-height:1.4;min-height:32px}
   .badge{display:inline-block;margin-top:7px;font:700 10px Montserrat;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:99px}
-  .badge.done{background:rgba(61,255,122,.14);color:var(--neon)}
+  .badge.done{background:rgba(61,255,154,.14);color:#6dffb0}
   .badge.live{background:rgba(255,123,123,.14);color:#ff8f8f}
   .badge.pending{background:rgba(255,255,255,.07);color:var(--mut)}
   .pc .btn{margin:6px 12px 12px}
   .empty{grid-column:1/-1;text-align:center;color:var(--mut);padding:40px 10px;border:1px dashed var(--line);border-radius:14px;font-size:13px}
-  .modal{position:fixed;inset:0;background:rgba(2,6,12,.88);backdrop-filter:blur(6px);z-index:50;display:flex;align-items:center;justify-content:center;padding:14px}
+  .modal{position:fixed;inset:0;background:rgba(6,4,20,.88);backdrop-filter:blur(6px);z-index:50;display:flex;align-items:center;justify-content:center;padding:14px}
   .modal[hidden]{display:none}
   .mbox{display:flex;flex-direction:column;align-items:center;gap:12px;max-width:100%;max-height:100%}
   #mCanvas{max-width:100%;max-height:calc(100vh - 130px);width:auto;height:auto;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
   .mbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center}
   #mTitle{font:600 12px Montserrat;color:#cfd8ea;max-width:340px;text-align:center}
-  #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:#0e1525;border:1px solid var(--neon);color:#e6edf7;padding:10px 16px;border-radius:10px;font:600 12px Montserrat;opacity:0;pointer-events:none;transition:.25s;z-index:60}
+  #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:#15104a;border:1px solid var(--neon);color:#e6edf7;padding:10px 16px;border-radius:10px;font:600 12px Montserrat;opacity:0;pointer-events:none;transition:.25s;z-index:60}
   #toast.show{opacity:1;transform:translateX(-50%)}
   .tip{margin-top:30px;font-size:11.5px;color:var(--mut);line-height:1.7;border-top:1px solid var(--line);padding-top:14px}
 </style>
@@ -70,7 +70,7 @@
   <header class="top">
     <div class="brand">
       <img id="hdrLogo" alt="PDM Cup 2026">
-      <div><h1>POSTER SKOR</h1><p>PDM CUP 2026 · Unduh untuk Instagram</p></div>
+      <div><h1>POSTER SKOR</h1><p>PDM CUP 2026</p></div>
     </div>
     <div class="ctrls">
       <div class="seg" id="fmtSeg">
@@ -100,8 +100,7 @@
   </section>
 
   <div class="tip">
-    Ketuk poster untuk pratinjau besar. Ukuran file 1080 px (siap unggah ke Instagram). Poster mengikuti data bagan secara otomatis,
-    jadi setelah skor diperbarui di halaman Admin, tekan “Muat ulang data” lalu unduh ulang.
+    Anu maca iyeu jelema jore!.
   </div>
 </div>
 
@@ -226,14 +225,7 @@ const FMT = {
   feed:  { H:1350, top:0,   bot:0,   name:'Feed 4:5' },
   story: { H:1920, top:150, bot:190, name:'Story 9:16' }
 };
-const C = {
-  gold: '#A855F7',
-  gold2: '#6D28D9',
-  goldL: '#C4B5FD',
-  teal: '#4DA3FF',
-  ink: '#07122E'
-};
-//const C = { gold:'#f2c85b', gold2:'#b98a1d', goldL:'#ffe9a6', teal:'#19d3c5', ink:'#05222a' };
+const C = { gold:'#f2c85b', gold2:'#b98a1d', goldL:'#ffe9a6', teal:'#8b7bff', ink:'#160c42' };
 const F = {
   disp:'"Bebas Neue","Oswald","Anton",Impact,"Arial Narrow",sans-serif',
   cond:'"Barlow Condensed","Oswald","Arial Narrow","DejaVu Sans Condensed",sans-serif',
@@ -295,7 +287,7 @@ function drawShuttle(c, x, y, s, rot, alpha) {
   const topY = -s * 3.5, topW = s * 1.95, botW = s * 0.55;
   c.beginPath(); c.moveTo(-botW, 0); c.lineTo(-topW, topY); c.quadraticCurveTo(0, topY - s * 0.7, topW, topY); c.lineTo(botW, 0); c.closePath();
   c.fillStyle = lg(c, 0, topY, 0, 0, [[0, 'rgba(255,255,255,.55)'], [1, 'rgba(255,255,255,.92)']]); c.fill();
-  c.strokeStyle = 'rgba(8,60,66,.55)'; c.lineWidth = Math.max(1, s * 0.035);
+  c.strokeStyle = 'rgba(70,50,150,.55)'; c.lineWidth = Math.max(1, s * 0.035);
   for (let i = -5; i <= 5; i++) { c.beginPath(); c.moveTo(i / 5 * botW, 0); c.quadraticCurveTo(i / 5 * (botW + topW) * 0.5, topY * 0.55, i / 5 * topW, topY - Math.abs(i) * s * 0.02); c.stroke(); }
   c.strokeStyle = C.gold; c.lineWidth = s * 0.07;
   c.beginPath(); c.moveTo(-topW * 0.62, topY * 0.55); c.quadraticCurveTo(0, topY * 0.55 + s * 0.28, topW * 0.62, topY * 0.55); c.stroke();
@@ -344,16 +336,16 @@ function ttIcon(c, x, y, s, col) { c.save(); c.translate(x + s * 0.08, y); c.sca
 // --- latar & bingkai ---
 function drawBase(c, H) {
   c.save();
-  c.fillStyle = lg(c, 0, 0, 0, H, [[0, '#07122e'], [.48, '#111743'], [1, '#08091c']]); c.fillRect(0, 0, W, H);
-  let g = c.createRadialGradient(540, 250, 20, 540, 250, 780); g.addColorStop(0, 'rgba(77,163,255,.32)'); g.addColorStop(1, 'rgba(77,163,255,0)'); c.fillStyle = g; c.fillRect(0, 0, W, H);
-  g = c.createRadialGradient(540, H, 10, 540, H, 860); g.addColorStop(0, 'rgba(168,85,247,.30)'); g.addColorStop(1, 'rgba(168,85,247,0)'); c.fillStyle = g; c.fillRect(0, 0, W, H);
+  c.fillStyle = lg(c, 0, 0, 0, H, [[0, '#2a1170'], [.45, '#1c2a82'], [1, '#070a2b']]); c.fillRect(0, 0, W, H);
+  let g = c.createRadialGradient(540, 250, 20, 540, 250, 780); g.addColorStop(0, 'rgba(139,123,255,.40)'); g.addColorStop(1, 'rgba(139,123,255,0)'); c.fillStyle = g; c.fillRect(0, 0, W, H);
+  g = c.createRadialGradient(540, H, 10, 540, H, 860); g.addColorStop(0, 'rgba(70,130,255,.34)'); g.addColorStop(1, 'rgba(70,130,255,0)'); c.fillStyle = g; c.fillRect(0, 0, W, H);
   // sorot cahaya diagonal
   c.save(); c.translate(540, H / 2); c.rotate(-0.62);
   [[-760, 150, .06], [-420, 70, .045], [-60, 200, .05], [380, 90, .04], [700, 160, .05]].forEach(([x, w, a]) => { c.fillStyle = lg(c, x, 0, x + w, 0, [[0, 'rgba(255,255,255,0)'], [.5, 'rgba(255,255,255,' + a + ')'], [1, 'rgba(255,255,255,0)']]); c.fillRect(x, -H, w, H * 2); });
   c.restore();
   // lapangan bulutangkis (garis tipis)
   const ppm = 160, nx = 540, ny = H * 0.56;
-  c.fillStyle = 'rgba(77,163,255,.06)'; c.fillRect(nx - 3.05 * ppm, ny - 6.7 * ppm, 6.1 * ppm, 13.4 * ppm);
+  c.fillStyle = 'rgba(139,123,255,.05)'; c.fillRect(nx - 3.05 * ppm, ny - 6.7 * ppm, 6.1 * ppm, 13.4 * ppm);
   c.strokeStyle = 'rgba(255,255,255,.10)'; c.lineWidth = 4; c.lineJoin = 'round';
   c.strokeRect(nx - 3.05 * ppm, ny - 6.7 * ppm, 6.1 * ppm, 13.4 * ppm);
   c.beginPath();
@@ -362,7 +354,7 @@ function drawBase(c, H) {
   [-5.94, 5.94].forEach(y => { c.moveTo(nx - 3.05 * ppm, ny + y * ppm); c.lineTo(nx + 3.05 * ppm, ny + y * ppm); });
   c.moveTo(nx, ny - 6.7 * ppm); c.lineTo(nx, ny - 1.98 * ppm); c.moveTo(nx, ny + 1.98 * ppm); c.lineTo(nx, ny + 6.7 * ppm);
   c.stroke();
-  c.setLineDash([14, 10]); c.strokeStyle = 'rgba(168,85,247,.35)'; c.lineWidth = 5; c.beginPath(); c.moveTo(nx - 3.4 * ppm, ny); c.lineTo(nx + 3.4 * ppm, ny); c.stroke(); c.setLineDash([]);
+  c.setLineDash([14, 10]); c.strokeStyle = 'rgba(150,180,255,.30)'; c.lineWidth = 5; c.beginPath(); c.moveTo(nx - 3.4 * ppm, ny); c.lineTo(nx + 3.4 * ppm, ny); c.stroke(); c.setLineDash([]);
   // ornamen raket & kok
   drawRacket(c, 70, H * 0.80, 330, -0.55, .07);
   drawRacket(c, 1010, H * 0.34, 300, 0.6, .06);
@@ -375,9 +367,9 @@ function drawBase(c, H) {
     c.globalAlpha = .08 + R() * .22; c.fillStyle = col; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill();
   }
   c.globalAlpha = 1;
-  // bingkai aksen ungu
+  // bingkai emas
   rr(c, 20, 20, W - 40, H - 40, 34); c.strokeStyle = lg(c, 0, 0, W, H, [[0, C.goldL], [.5, C.gold], [1, C.gold2]]); c.lineWidth = 4; c.stroke();
-  rr(c, 34, 34, W - 68, H - 68, 26); c.strokeStyle = 'rgba(168,85,247,.32)'; c.lineWidth = 1.5; c.stroke();
+  rr(c, 34, 34, W - 68, H - 68, 26); c.strokeStyle = 'rgba(242,200,91,.28)'; c.lineWidth = 1.5; c.stroke();
   c.fillStyle = C.gold;
   [[34, 34], [W - 34, 34], [34, H - 34], [W - 34, H - 34]].forEach(([x, y]) => { c.save(); c.translate(x, y); c.rotate(Math.PI / 4); c.fillRect(-7, -7, 14, 14); c.restore(); });
   c.restore();
@@ -386,7 +378,7 @@ function drawBase(c, H) {
 function medallion(c, x, y, r, key) {
   c.save();
   c.shadowColor = 'rgba(0,0,0,.45)'; c.shadowBlur = 18; c.shadowOffsetY = 6;
-  c.beginPath(); c.arc(x, y, r, 0, 7); c.fillStyle = lg(c, x, y - r, x, y + r, [[0, '#ffffff'], [1, '#dcefec']]); c.fill();
+  c.beginPath(); c.arc(x, y, r, 0, 7); c.fillStyle = lg(c, x, y - r, x, y + r, [[0, '#ffffff'], [1, '#dcd9ff']]); c.fill();
   c.shadowColor = 'transparent';
   c.lineWidth = 6; c.strokeStyle = lg(c, x - r, y - r, x + r, y + r, [[0, C.goldL], [.5, C.gold], [1, C.gold2]]); c.stroke();
   c.beginPath(); c.arc(x, y, r + 10, 0, 7); c.strokeStyle = 'rgba(242,200,91,.40)'; c.lineWidth = 1.6; c.stroke();
@@ -460,17 +452,17 @@ function drawFooter(c, H, bot) {
 }
 
 // --- poster skor satu pertandingan ---
-function drawTeamCard(c, x, y, w, h, team, sets, st) {
+function drawTeamCard(c, x, y, w, h, team, sets, st, cap) {
   c.save();
   rr(c, x, y, w, h, 22);
-  c.fillStyle = lg(c, x, y, x + w, y + h, [[0, 'rgba(4,40,45,.93)'], [1, 'rgba(3,22,28,.93)']]);
+  c.fillStyle = lg(c, x, y, x + w, y + h, [[0, 'rgba(30,18,88,.93)'], [1, 'rgba(14,10,52,.93)']]);
   if (st === 'win') { c.shadowColor = 'rgba(242,200,91,.5)'; c.shadowBlur = 34; }
   c.fill(); c.shadowColor = 'transparent'; c.shadowBlur = 0;
   if (st === 'win') {
     rr(c, x, y, w, h, 22); c.fillStyle = lg(c, x, 0, x + w, 0, [[0, 'rgba(242,200,91,.22)'], [.65, 'rgba(242,200,91,.04)'], [1, 'rgba(242,200,91,0)']]); c.fill();
     rr(c, x, y, w, h, 22); c.lineWidth = 4; c.strokeStyle = lg(c, x, y, x + w, y + h, [[0, C.goldL], [.5, C.gold], [1, C.gold2]]); c.stroke();
   } else { rr(c, x, y, w, h, 22); c.lineWidth = 2; c.strokeStyle = 'rgba(255,255,255,.17)'; c.stroke(); }
-  c.save(); rr(c, x, y, w, h, 22); c.clip(); c.fillStyle = st === 'win' ? C.gold : 'rgba(25,211,197,.75)'; c.fillRect(x, y, 10, h); c.restore();
+  c.save(); rr(c, x, y, w, h, 22); c.clip(); c.fillStyle = st === 'win' ? C.gold : 'rgba(139,123,255,.75)'; c.fillRect(x, y, 10, h); c.restore();
   // label seed + tag
   c.textBaseline = 'middle'; c.textAlign = 'left';
   c.font = fnt(700, 20, F.sans); c.fillStyle = st === 'lose' ? 'rgba(242,200,91,.55)' : C.gold;
@@ -486,9 +478,11 @@ function drawTeamCard(c, x, y, w, h, team, sets, st) {
   rr(c, bx, by, bw, bh, 18);
   if (st === 'win') { c.fillStyle = lg(c, 0, by, 0, by + bh, [[0, '#ffe9a6'], [.5, C.gold], [1, '#c99a2c']]); c.fill(); }
   else { c.fillStyle = 'rgba(255,255,255,.07)'; c.fill(); c.lineWidth = 2; c.strokeStyle = 'rgba(255,255,255,.14)'; c.stroke(); }
-  c.font = fnt(400, bh * 0.86, F.disp); c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.font = fnt(400, bh * 0.70, F.disp); c.textAlign = 'center'; c.textBaseline = 'middle';
   c.fillStyle = st === 'win' ? C.ink : st === 'lose' ? 'rgba(255,255,255,.6)' : '#fff';
-  c.fillText(String(sets), bx + bw / 2, by + bh / 2 + bh * 0.05);
+  c.fillText(String(sets), bx + bw / 2, by + bh * 0.44);
+  c.font = fnt(800, 15, F.sans); c.fillStyle = st === 'win' ? 'rgba(20,12,64,.75)' : (cap && cap !== 'SET' ? '#ff9d9d' : 'rgba(242,200,91,.8)');
+  spaced(c, cap || 'SET', bx + bw / 2, by + bh - 22, 4, 'center');
   // nama
   const nx = x + 36, nw = bx - 22 - nx; c.textAlign = 'left';
   c.fillStyle = st === 'lose' ? 'rgba(255,255,255,.62)' : '#fff';
@@ -513,8 +507,13 @@ function drawMatchPoster(c, spec) {
   c.save(); c.translate(70, by); c.scale(k, k);
   const played = []; for (let q = 0; q < S.bestOf; q++) if (gPlayed(m.g[q])) played.push(q);
   const done = m.kind === 'done', live = !done && played.length > 0;
+  // game yang skornya belum sah/selesai = sedang berjalan -> tampilkan poinnya
+  const isFin = g => g && g[0] != null && g[1] != null && gameValid(g[0], g[1], S.pointsTarget);
+  const unfinished = played.filter(q => !isFin(m.g[q])), liveK = (!done && unfinished.length) ? unfinished[unfinished.length - 1] : -1;
+  const vA = liveK >= 0 ? (m.g[liveK][0] || 0) : m.res.wa, vB = liveK >= 0 ? (m.g[liveK][1] || 0) : m.res.wb;
+  const cap = liveK >= 0 ? 'POIN GAME ' + (liveK + 1) : 'SET';
   // status
-  const stTxt = done ? 'HASIL AKHIR' : live ? 'SEDANG BERLANGSUNG' : 'SEGERA BERTANDING';
+  const stTxt = done ? 'HASIL AKHIR' : live ? 'SEDANG BERLANGSUNG' + (m.res.wa + m.res.wb > 0 ? '  •  SET ' + m.res.wa + '–' + m.res.wb : '') : 'SEGERA BERTANDING';
   c.font = fnt(800, 19, F.sans); c.textBaseline = 'middle'; const sw = spacedW(c, stTxt, 5) + (live ? 70 : 54);
   rr(c, uw / 2 - sw / 2, 0, sw, 40, 20); c.fillStyle = done ? 'rgba(61,255,154,.16)' : live ? 'rgba(255,120,120,.18)' : 'rgba(255,255,255,.10)'; c.fill();
   c.lineWidth = 1.6; c.strokeStyle = done ? 'rgba(61,255,154,.7)' : live ? 'rgba(255,130,130,.8)' : 'rgba(255,255,255,.3)'; c.stroke();
@@ -524,10 +523,10 @@ function drawMatchPoster(c, spec) {
   // kartu tim
   const aW = done && m.winner.seed === m.a.seed, bW = done && m.winner.seed === m.b.seed;
   const stA = done ? (aW ? 'win' : 'lose') : 'neu', stB = done ? (bW ? 'win' : 'lose') : 'neu';
-  drawTeamCard(c, 0, 56, uw, 220, m.a, m.res.wa, stA);
-  drawTeamCard(c, 0, 314, uw, 220, m.b, m.res.wb, stB);
+  drawTeamCard(c, 0, 56, uw, 220, m.a, vA, stA, cap);
+  drawTeamCard(c, 0, 314, uw, 220, m.b, vB, stB, cap);
   // VS
-  c.save(); c.shadowColor = 'rgba(0,0,0,.5)'; c.shadowBlur = 16; c.beginPath(); c.arc(uw / 2, 295, 36, 0, 7); c.fillStyle = '#031a20'; c.fill(); c.restore();
+  c.save(); c.shadowColor = 'rgba(0,0,0,.5)'; c.shadowBlur = 16; c.beginPath(); c.arc(uw / 2, 295, 36, 0, 7); c.fillStyle = '#0c0a3a'; c.fill(); c.restore();
   c.lineWidth = 4; c.strokeStyle = lg(c, uw / 2 - 36, 259, uw / 2 + 36, 331, [[0, C.goldL], [1, C.gold2]]); c.beginPath(); c.arc(uw / 2, 295, 36, 0, 7); c.stroke();
   c.font = fnt(400, 40, F.disp); c.fillStyle = C.gold; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('VS', uw / 2, 298);
   // rincian game
@@ -536,8 +535,9 @@ function drawMatchPoster(c, spec) {
     const n = played.length, gap = 18, cw = Math.min(300, (uw - gap * (n - 1)) / n), tw = n * cw + (n - 1) * gap, gx0 = (uw - tw) / 2;
     played.forEach((q, idx) => {
       const g = m.g[q], gx = gx0 + idx * (cw + gap), a = g[0] != null ? g[0] : 0, b = g[1] != null ? g[1] : 0, both = g[0] != null && g[1] != null;
-      rr(c, gx, gy, cw, 110, 18); c.fillStyle = 'rgba(3,26,32,.85)'; c.fill(); c.lineWidth = 2; c.strokeStyle = 'rgba(255,255,255,.15)'; c.stroke();
-      c.font = fnt(700, 16, F.sans); c.fillStyle = C.gold; c.textBaseline = 'middle'; spaced(c, 'GAME ' + (q + 1), gx + cw / 2, gy + 24, 4, 'center');
+      const isLive = q === liveK;
+      rr(c, gx, gy, cw, 110, 18); c.fillStyle = 'rgba(14,12,56,.85)'; c.fill(); c.lineWidth = isLive ? 3 : 2; c.strokeStyle = isLive ? 'rgba(255,130,130,.9)' : 'rgba(255,255,255,.15)'; c.stroke();
+      c.font = fnt(700, 16, F.sans); c.fillStyle = isLive ? '#ff9d9d' : C.gold; c.textBaseline = 'middle'; spaced(c, 'GAME ' + (q + 1) + (isLive ? '  •  BERJALAN' : ''), gx + cw / 2, gy + 24, 4, 'center');
       c.font = fnt(400, 66, F.disp); c.textBaseline = 'middle';
       const aw = both && a > b, bw2 = both && b > a, my = gy + 71;
       c.textAlign = 'right'; c.fillStyle = aw ? C.gold : 'rgba(255,255,255,.72)'; c.fillText(String(a), gx + cw / 2 - 26, my);
@@ -545,7 +545,7 @@ function drawMatchPoster(c, spec) {
       c.textAlign = 'left'; c.fillStyle = bw2 ? C.gold : 'rgba(255,255,255,.72)'; c.fillText(String(b), gx + cw / 2 + 26, my);
     });
   } else {
-    rr(c, 0, gy + 10, uw, 90, 20); c.fillStyle = 'rgba(3,26,32,.8)'; c.fill(); c.lineWidth = 2; c.strokeStyle = 'rgba(242,200,91,.4)'; c.setLineDash([10, 8]); c.stroke(); c.setLineDash([]);
+    rr(c, 0, gy + 10, uw, 90, 20); c.fillStyle = 'rgba(14,12,56,.8)'; c.fill(); c.lineWidth = 2; c.strokeStyle = 'rgba(242,200,91,.4)'; c.setLineDash([10, 8]); c.stroke(); c.setLineDash([]);
     c.font = fnt(700, 30, F.cond); c.fillStyle = C.gold; c.textBaseline = 'middle'; spaced(c, 'SKOR AKAN SEGERA DIUMUMKAN', uw / 2, gy + 56, 5, 'center');
   }
   c.restore();
@@ -597,7 +597,7 @@ function drawBRow(c, x, y, w, h, m, side) {
 }
 function drawBCard(c, x, y, w, h, m) {
   c.save();
-  rr(c, x, y, w, h, 14); c.fillStyle = lg(c, x, y, x, y + h, [[0, 'rgba(5,46,51,.92)'], [1, 'rgba(3,26,31,.94)']]); c.fill();
+  rr(c, x, y, w, h, 14); c.fillStyle = lg(c, x, y, x, y + h, [[0, 'rgba(30,22,92,.92)'], [1, 'rgba(16,12,60,.94)']]); c.fill();
   c.lineWidth = 1.6; c.strokeStyle = m.kind === 'done' ? 'rgba(242,200,91,.5)' : 'rgba(255,255,255,.15)'; c.stroke();
   const strip = 40;
   c.save(); rr(c, x, y, w, h, 14); c.clip(); c.fillStyle = 'rgba(242,200,91,.14)'; c.fillRect(x, y, strip, h); c.restore();
@@ -608,7 +608,7 @@ function drawBCard(c, x, y, w, h, m) {
 }
 function drawBracketPoster(c, spec) {
   const f = FMT[fmt], H = f.H, top = f.top, bot = f.bot, n = B.size >> spec.r;
-  const arr = B.rounds[spec.r].slice(spec.page * 16, spec.page * 16 + 16).filter(m => m.kind !== 'void');
+  const arr = B.rounds[spec.r].filter(m => m.kind !== 'void' && m.kind !== 'bye').slice(spec.page * 16, spec.page * 16 + 16);
   drawBase(c, H); drawFooter(c, H, bot);
   drawHeader(c, top, 'BAGAN ' + RLABEL[n] + (spec.pages > 1 ? '  (' + (spec.page + 1) + '/' + spec.pages + ')' : ''));
   const y0 = top + 490, y1 = H - bot - 188, Hc = y1 - y0;
@@ -678,8 +678,10 @@ async function sync(manual) {
   if (raw) {
     const str = typeof raw === 'object' ? JSON.stringify(raw) : raw;
     lastSync = new Date();
-    if (str !== lastRaw) { const ok = applyRaw(str, 'server'); if (ok) { lastRaw = ok; try { localStorage.setItem(KEY, ok); } catch (e) {} renderAll(); if (manual) toast('Data diperbarui dari server'); } }
-    else { dataSrc = 'server'; if (manual) toast('Data sudah terbaru'); }
+    let sv = 0; try { sv = +(JSON.parse(str).savedAt) || 0; } catch (e) {}
+    const lv = (S && S.savedAt) || 0;
+    if (str !== lastRaw && !(dataSrc === 'local' && lv > sv)) { const ok = applyRaw(str, 'server'); if (ok) { lastRaw = ok; renderAll(); if (manual) toast('Data diperbarui dari server'); } }
+    else { if (str === lastRaw) dataSrc = 'server'; if (manual) toast(str === lastRaw ? 'Data sudah terbaru' : 'Memakai data lokal yang lebih baru'); }
   } else if (manual) toast('Server tidak terjangkau, memakai data tersimpan');
   setSync();
 }
@@ -687,7 +689,7 @@ function setSync() {
   const dot = $('#syncDot'), info = $('#syncInfo'); dot.className = 'dot ' + dataSrc;
   const done = specsM.filter(s => s.status === 'done').length;
   const t = lastSync ? ' · sinkron ' + lastSync.toLocaleTimeString('id-ID') : '';
-  const label = dataSrc === 'server' ? 'Data langsung dari server' : dataSrc === 'local' ? 'Data tersimpan di perangkat ini' : 'Data contoh (belum ada data bagan)';
+  const label = dataSrc === 'server' ? 'Data Online' : dataSrc === 'local' ? 'Data tersimpan di perangkat ini' : 'Data contoh (belum ada data bagan)';
   info.textContent = label + t + ' · ' + S.teams.length + ' tim · ' + done + ' pertandingan selesai';
 }
 
@@ -695,10 +697,10 @@ const slug = s => s.replace(/\s+/g, '-');
 function buildSpecs() {
   specsB = []; specsM = [];
   for (let r = 0; r < B.R; r++) {
-    const arr = B.rounds[r], n = B.size >> r, pages = Math.max(1, Math.ceil(arr.length / 16));
+    const arr = B.rounds[r], n = B.size >> r, pages = Math.max(1, Math.ceil(arr.filter(m => m.kind !== 'void' && m.kind !== 'bye').length / 16));
     for (let p = 0; p < pages; p++) {
-      const real = arr.slice(p * 16, p * 16 + 16).filter(m => m.kind !== 'void'); if (!real.length) continue;
-      const d = real.filter(m => m.kind === 'done').length, tot = real.filter(m => m.kind !== 'bye').length;
+      const real = arr.filter(m => m.kind !== 'void' && m.kind !== 'bye').slice(p * 16, p * 16 + 16); if (!real.length) continue;
+      const d = real.filter(m => m.kind === 'done').length, tot = real.length;
       specsB.push({ type: 'bracket', r, page: p, pages, id: 'b' + r + '_' + p, label: 'Bagan ' + RLABEL[n] + (pages > 1 ? ' (' + (p + 1) + '/' + pages + ')' : ''),
         sub: tot ? d + ' dari ' + tot + ' pertandingan selesai' : 'Lolos otomatis (BYE)', status: tot && d === tot ? 'done' : d ? 'live' : 'pending',
         file: 'PDMCup2026_Bagan_' + slug(RLABEL[n]) + (pages > 1 ? '_Bagian' + (p + 1) : '') + '.png' });
@@ -799,7 +801,7 @@ document.addEventListener('keydown', e => { if ($('#modal').hidden) return; if (
 window.addEventListener('storage', e => { if (e.key === KEY && e.newValue && e.newValue !== lastRaw) { const ok = applyRaw(e.newValue, 'local'); if (ok) { lastRaw = ok; renderAll(); } } });
 
 initialLoad(); renderAll();
-sync(false); setInterval(() => { if (!document.hidden) sync(false); }, 8000);
+sync(false); setInterval(() => { if (!document.hidden) sync(false); }, 4000);
 </script>
 </body>
 </html>
