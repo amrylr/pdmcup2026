@@ -50,7 +50,7 @@
   .meta .s{font-size:11.5px;color:var(--mut);margin-top:4px;line-height:1.4;min-height:32px}
   .badge{display:inline-block;margin-top:7px;font:700 10px Montserrat;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:99px}
   .badge.done{background:rgba(61,255,154,.14);color:#6dffb0}
-  .badge.live{background:rgba(255,123,123,.14);color:#ff8f8f}
+  .badge.partial{background:rgba(255,200,61,.14);color:#ffd36b}
   .badge.pending{background:rgba(255,255,255,.07);color:var(--mut)}
   .pc .btn{margin:6px 12px 12px}
   .empty{grid-column:1/-1;text-align:center;color:var(--mut);padding:40px 10px;border:1px dashed var(--line);border-radius:14px;font-size:13px}
@@ -70,7 +70,7 @@
   <header class="top">
     <div class="brand">
       <img id="hdrLogo" alt="PDM Cup 2026">
-      <div><h1>POSTER SKOR</h1><p>PDM CUP 2026</p></div>
+      <div><h1>POSTER SKOR</h1><p>PDM CUP 2026 · Unduh untuk Instagram</p></div>
     </div>
     <div class="ctrls">
       <div class="seg" id="fmtSeg">
@@ -100,7 +100,8 @@
   </section>
 
   <div class="tip">
-    Anu maca iyeu jelema jore!.
+    Ketuk poster untuk pratinjau besar. Ukuran file 1080 px (siap unggah ke Instagram). Poster mengikuti data bagan secara otomatis,
+    jadi setelah skor diperbarui di halaman Admin, tekan “Muat ulang data” lalu unduh ulang.
   </div>
 </div>
 
@@ -186,6 +187,16 @@ function evalMatch(g, s) {
   const decided = (wa >= need || wb >= need);
   return { wa, wb, valid, decided, complete: decided && valid };
 }
+// Poster: pertandingan yang sudah punya skor dianggap selesai; set = jumlah game yang dimenangkan (poin lebih tinggi)
+function lenientRes(g, s) {
+  let wa = 0, wb = 0, played = false;
+  for (let k = 0; k < s.bestOf; k++) {
+    const x = g && g[k]; if (!x || (x[0] == null && x[1] == null)) continue;
+    played = true; const a = x[0] == null ? 0 : x[0], b = x[1] == null ? 0 : x[1];
+    if (a > b) wa++; else if (b > a) wb++;
+  }
+  return { wa, wb, played, valid: true, decided: wa !== wb, complete: played && wa !== wb };
+}
 function computeBracket(s) {
   const N = s.teams.length, size = bracketSize(s), R = Math.log2(size);
   const order = s.seedMode === 'order' ? Array.from({ length: size }, (_, k) => k + 1) : seedOrder(size);
@@ -197,12 +208,12 @@ function computeBracket(s) {
       const a = r === 0 ? slot(2 * i)     : rounds[r - 1][2 * i].winner;
       const b = r === 0 ? slot(2 * i + 1) : rounds[r - 1][2 * i + 1].winner;
       const d = s.matches[r + '-' + i] || {};
-      const res = evalMatch(d.g, s);
+      const res = lenientRes(d.g, s);
       const m = { r, i, a, b, g: d.g || [], res, kind:'wait', winner:TBD, no:0 };
       if (a.type === 'bye' && b.type === 'bye') { m.kind = 'void'; m.winner = BYE; }
       else if (a.type === 'bye' || b.type === 'bye') { m.kind = 'bye'; m.winner = a.type === 'bye' ? b : a; }
       else if (a.type === 'team' && b.type === 'team') {
-        if (d.done && res.complete) { m.kind = 'done'; m.winner = res.wa > res.wb ? a : b; }
+        if (res.played && res.wa !== res.wb) { m.kind = 'done'; m.winner = res.wa > res.wb ? a : b; }
         else m.kind = 'ready';
       }
       if (m.kind === 'ready' || m.kind === 'wait' || m.kind === 'done') m.no = ++no;
@@ -412,7 +423,7 @@ function drawHeader(c, top, pill) {
   spaced(c, 'PDM CUP 2026', 540, ty, 9, 'center');
   c.shadowColor = 'transparent'; c.shadowBlur = 0; c.shadowOffsetY = 0;
   c.font = fnt(600, 29, F.cond); c.fillStyle = 'rgba(255,255,255,.9)';
-  spaced(c, 'BADMINTON OPEN TOURNAMENT', 540, top + 366, 6, 'center');
+  spaced(c, 'BADMINTON OPEN TOURNAMENT  •  GANDA PUTRA', 540, top + 366, 6, 'center');
   // pil babak
   const py = top + 424, ph = 56;
   let fs = 31; c.font = fnt(700, fs, F.cond); let tw = spacedW(c, pill, 5);
@@ -506,14 +517,14 @@ function drawMatchPoster(c, spec) {
   const by = y0 + (Hc - UH * k) / 2;
   c.save(); c.translate(70, by); c.scale(k, k);
   const played = []; for (let q = 0; q < S.bestOf; q++) if (gPlayed(m.g[q])) played.push(q);
-  const done = m.kind === 'done', live = !done && played.length > 0;
+  const decided = m.kind === 'done', done = decided || played.length > 0, live = false;
   // game yang skornya belum sah/selesai = sedang berjalan -> tampilkan poinnya
   const isFin = g => g && g[0] != null && g[1] != null && gameValid(g[0], g[1], S.pointsTarget);
-  const unfinished = played.filter(q => !isFin(m.g[q])), liveK = (!done && unfinished.length) ? unfinished[unfinished.length - 1] : -1;
+  const unfinished = played.filter(q => !isFin(m.g[q])), liveK = -1;
   const vA = liveK >= 0 ? (m.g[liveK][0] || 0) : m.res.wa, vB = liveK >= 0 ? (m.g[liveK][1] || 0) : m.res.wb;
   const cap = liveK >= 0 ? 'POIN GAME ' + (liveK + 1) : 'SET';
   // status
-  const stTxt = done ? 'HASIL AKHIR' : live ? 'SEDANG BERLANGSUNG' + (m.res.wa + m.res.wb > 0 ? '  •  SET ' + m.res.wa + '–' + m.res.wb : '') : 'SEGERA BERTANDING';
+  const stTxt = done ? 'HASIL AKHIR' : 'SEGERA BERTANDING';
   c.font = fnt(800, 19, F.sans); c.textBaseline = 'middle'; const sw = spacedW(c, stTxt, 5) + (live ? 70 : 54);
   rr(c, uw / 2 - sw / 2, 0, sw, 40, 20); c.fillStyle = done ? 'rgba(61,255,154,.16)' : live ? 'rgba(255,120,120,.18)' : 'rgba(255,255,255,.10)'; c.fill();
   c.lineWidth = 1.6; c.strokeStyle = done ? 'rgba(61,255,154,.7)' : live ? 'rgba(255,130,130,.8)' : 'rgba(255,255,255,.3)'; c.stroke();
@@ -522,7 +533,7 @@ function drawMatchPoster(c, spec) {
   if (live) { c.beginPath(); c.arc(uw / 2 - sw / 2 + 24, 20, 6, 0, 7); c.fillStyle = '#ff5b5b'; c.shadowColor = '#ff5b5b'; c.shadowBlur = 12; c.fill(); c.shadowBlur = 0; c.shadowColor = 'transparent'; }
   // kartu tim
   const aW = done && m.winner.seed === m.a.seed, bW = done && m.winner.seed === m.b.seed;
-  const stA = done ? (aW ? 'win' : 'lose') : 'neu', stB = done ? (bW ? 'win' : 'lose') : 'neu';
+  const stA = decided ? (aW ? 'win' : 'lose') : 'neu', stB = decided ? (bW ? 'win' : 'lose') : 'neu';
   drawTeamCard(c, 0, 56, uw, 220, m.a, vA, stA, cap);
   drawTeamCard(c, 0, 314, uw, 220, m.b, vB, stB, cap);
   // VS
@@ -689,7 +700,7 @@ function setSync() {
   const dot = $('#syncDot'), info = $('#syncInfo'); dot.className = 'dot ' + dataSrc;
   const done = specsM.filter(s => s.status === 'done').length;
   const t = lastSync ? ' · sinkron ' + lastSync.toLocaleTimeString('id-ID') : '';
-  const label = dataSrc === 'server' ? 'Data Online' : dataSrc === 'local' ? 'Data tersimpan di perangkat ini' : 'Data contoh (belum ada data bagan)';
+  const label = dataSrc === 'server' ? 'Data langsung dari server' : dataSrc === 'local' ? 'Data tersimpan di perangkat ini' : 'Data contoh (belum ada data bagan)';
   info.textContent = label + t + ' · ' + S.teams.length + ' tim · ' + done + ' pertandingan selesai';
 }
 
@@ -700,14 +711,14 @@ function buildSpecs() {
     const arr = B.rounds[r], n = B.size >> r, pages = Math.max(1, Math.ceil(arr.filter(m => m.kind !== 'void' && m.kind !== 'bye').length / 16));
     for (let p = 0; p < pages; p++) {
       const real = arr.filter(m => m.kind !== 'void' && m.kind !== 'bye').slice(p * 16, p * 16 + 16); if (!real.length) continue;
-      const d = real.filter(m => m.kind === 'done').length, tot = real.length;
+      const d = real.filter(m => m.kind === 'done' || anyPlayed(m)).length, tot = real.length;
       specsB.push({ type: 'bracket', r, page: p, pages, id: 'b' + r + '_' + p, label: 'Bagan ' + RLABEL[n] + (pages > 1 ? ' (' + (p + 1) + '/' + pages + ')' : ''),
-        sub: tot ? d + ' dari ' + tot + ' pertandingan selesai' : 'Lolos otomatis (BYE)', status: tot && d === tot ? 'done' : d ? 'live' : 'pending',
+        sub: tot ? d + ' dari ' + tot + ' pertandingan selesai' : 'Lolos otomatis (BYE)', status: tot && d === tot ? 'done' : d ? 'partial' : 'pending',
         file: 'PDMCup2026_Bagan_' + slug(RLABEL[n]) + (pages > 1 ? '_Bagian' + (p + 1) : '') + '.png' });
     }
     arr.forEach(m => {
       if (m.kind !== 'done' && m.kind !== 'ready') return;
-      const has = anyPlayed(m), st = m.kind === 'done' ? 'done' : has ? 'live' : 'pending';
+      const st = (m.kind === 'done' || anyPlayed(m)) ? 'done' : 'pending';
       const nm = t => splitName(t.name).join(' / ');
       specsM.push({ type: 'match', r, i: m.i, id: 'm' + r + '_' + m.i, n, no: m.no, status: st,
         label: 'Match ' + pad2(m.no) + ' · ' + RLABEL[n], sub: nm(m.a) + '  vs  ' + nm(m.b),
@@ -721,7 +732,7 @@ const io = ('IntersectionObserver' in window) ? new IntersectionObserver(es => e
   const spec = e.target._spec; fontsReady.then(() => paint(e.target, spec, 360));
 }), { rootMargin: '300px' }) : null;
 
-const BADGE = { done: ['done', 'Selesai'], live: ['live', 'Sedang berlangsung'], pending: ['pending', 'Belum dimainkan'] };
+const BADGE = { done: ['done', 'Selesai'], partial: ['partial', 'Sebagian selesai'], pending: ['pending', 'Belum dimainkan'] };
 function cardEl(spec) {
   const el = document.createElement('article'); el.className = 'pc';
   const [bc, bt] = BADGE[spec.status];
