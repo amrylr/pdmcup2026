@@ -228,7 +228,7 @@ function computeBracket(s) {
       const b = r === 0 ? slot(2 * i + 1) : rounds[r - 1][2 * i + 1].winner;
       const d = s.matches[r + '-' + i] || {};
       const res = lenientRes(d.g, s);
-      const m = { r, i, a, b, g: d.g || [], res, kind:'wait', winner:TBD, no:0 };
+      const m = { r, i, a, b, g: d.g || [], res, kind:'wait', winner:TBD, no:0, time: d.time || '' };
       if (a.type === 'bye' && b.type === 'bye') { m.kind = 'void'; m.winner = BYE; }
       else if (a.type === 'bye' || b.type === 'bye') { m.kind = 'bye'; m.winner = a.type === 'bye' ? b : a; }
       else if (a.type === 'team' && b.type === 'team') {
@@ -239,6 +239,20 @@ function computeBracket(s) {
       arr.push(m);
     }
     rounds.push(arr);
+  }
+  if (R >= 2) {
+    const loser = x => x.kind === 'bye' ? (x.a.type === 'bye' ? x.a : x.b.type === 'bye' ? x.b : BYE)
+                     : x.kind === 'done' ? (x.winner.seed === x.a.seed ? x.b : x.a) : TBD;
+    const a3 = loser(rounds[R - 2][0]), b3 = loser(rounds[R - 2][1]);
+    const d3 = s.matches[(R - 1) + '-1'] || {}, res3 = lenientRes(d3.g, s);
+    const m3 = { r: R - 1, i: 1, a: a3, b: b3, g: d3.g || [], res: res3, kind:'wait', winner:TBD, no:0, time: d3.time || '', isThird: true };
+    if (a3.type === 'bye' || b3.type === 'bye') { m3.kind = 'void'; m3.winner = BYE; }
+    else if (a3.type === 'team' && b3.type === 'team') {
+      if (res3.played && res3.wa !== res3.wb) { m3.kind = 'done'; m3.winner = res3.wa > res3.wb ? a3 : b3; }
+      else m3.kind = 'ready';
+    }
+    if (m3.kind !== 'void') m3.no = ++no;
+    rounds[R - 1].push(m3);
   }
   const w = rounds[R - 1][0].winner;
   return { size, R, N, rounds, champ: w.type === 'team' ? w : null };
@@ -528,12 +542,13 @@ function drawTeamCard(c, x, y, w, h, team, sets, st, cap) {
   c.restore();
 }
 
+const MATCH_DATE = new Date(2026, 10, 8);
+function fmtJam(t) { const k = /^(\d{1,2}):(\d{2})/.exec(t || ''); return k ? pad2(k[1]) + '.' + k[2] : ''; }
 function timeText(r, i) {
-  const d = TIMES[r + '-' + i]; if (!d) return ''; const out = [];
-  if (d.t) {
-    const dt = new Date(d.t);
-    if (!isNaN(dt)) out.push(dt.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + '  •  ' + dt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false }).replace(':', '.') + ' WIB');
-  }
+  const m = B.rounds[r][i], d = TIMES[r + '-' + i] || {}, out = [];
+  let jam = fmtJam(m.time);
+  if (!jam && d.t) { const dt = new Date(d.t); if (!isNaN(dt)) jam = pad2(dt.getHours()) + '.' + pad2(dt.getMinutes()); }
+  out.push(MATCH_DATE.toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long', year:'numeric' }) + (jam ? '  •  ' + jam + ' WIB' : ''));
   if (d.c && String(d.c).trim()) out.push('LAPANGAN ' + String(d.c).trim().toUpperCase());
   return out.join('  •  ');
 }
@@ -545,7 +560,7 @@ function clockIcon(c, cx, cy, r, col) {
 function drawMatchPoster(c, spec) {
   const f = FMT[fmt], H = f.H, top = f.top, bot = f.bot, m = B.rounds[spec.r][spec.i];
   drawBase(c, H); drawFooter(c, H, bot);
-  drawHeader(c, top, roundPill(B.size >> m.r) + '  •  MATCH ' + pad2(m.no));
+  drawHeader(c, top, (m.isThird ? 'JUARA 3' : roundPill(B.size >> m.r)) + '  •  MATCH ' + pad2(m.no));
   const y0 = top + 484, y1 = H - bot - 190, Hc = y1 - y0, tt = timeText(m.r, m.i), off = tt ? 50 : 0, UH = 690 + off, k = Math.min(1.25, Hc / UH), uw = 940 / k;
   const by = y0 + (Hc - UH * k) / 2;
   c.save(); c.translate(70, by); c.scale(k, k);
@@ -651,7 +666,13 @@ function drawBCard(c, x, y, w, h, m) {
   c.lineWidth = 1.6; c.strokeStyle = m.kind === 'done' ? 'rgba(242,200,91,.5)' : 'rgba(255,255,255,.15)'; c.stroke();
   const strip = 40;
   c.save(); rr(c, x, y, w, h, 14); c.clip(); c.fillStyle = 'rgba(242,200,91,.14)'; c.fillRect(x, y, strip, h); c.restore();
-  if (m.no) { c.fillStyle = C.gold; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = fnt(400, Math.min(30, h * .38), F.disp); c.fillText(pad2(m.no), x + strip / 2, y + h / 2 + 1); }
+  if (m.no) {
+  const jam = fmtJam(m.time);
+  c.fillStyle = C.gold; c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.font = fnt(400, Math.min(30, h * (jam ? .30 : .38)), F.disp);
+  c.fillText(pad2(m.no), x + strip / 2, y + h * (jam ? .36 : .5) + 1);
+  if (jam) { c.font = fnt(700, Math.min(14, h * .2), F.cond); c.fillStyle = '#fff'; c.fillText(jam, x + strip / 2, y + h * .74); }
+}
   drawBRow(c, x + strip, y, w - strip, h / 2, m, 0); drawBRow(c, x + strip, y + h / 2, w - strip, h / 2, m, 1);
   c.strokeStyle = 'rgba(255,255,255,.11)'; c.lineWidth = 1; c.beginPath(); c.moveTo(x + strip + 8, y + h / 2); c.lineTo(x + w - 10, y + h / 2); c.stroke();
   c.restore();
@@ -660,23 +681,28 @@ function drawBracketPoster(c, spec) {
   const f = FMT[fmt], H = f.H, top = f.top, bot = f.bot, n = B.size >> spec.r;
   const arr = B.rounds[spec.r].filter(m => m.kind !== 'void' && m.kind !== 'bye').slice(spec.page * 16, spec.page * 16 + 16);
   drawBase(c, H); drawFooter(c, H, bot);
-  drawHeader(c, top, 'BAGAN ' + RLABEL[n] + (spec.pages > 1 ? '  (' + (spec.page + 1) + '/' + spec.pages + ')' : ''));
+  drawHeader(c, top, 'BAGAN ' + RLABEL[n] + (spec.pages > 1 ? '  (' + (spec.page + 1) + '/' + spec.pages + ')' : '') + '  •  8 NOV 2026');
   const y0 = top + 490, y1 = H - bot - 188, Hc = y1 - y0;
   if (spec.r === B.R - 1) {
-    const m = arr[0], champ = B.champ, ch = 250, tr = champ ? 170 : 150;
-    const blockH = tr + 20 + (champ ? 70 + 130 : 60) + 24 + ch, by = y0 + Math.max(0, (Hc - blockH) / 2);
+    const m = arr.find(x => !x.isThird), m3 = arr.find(x => x.isThird), champ = B.champ, ch = 150, tr = 110;
+    const nameH = champ ? 150 : 44, thirdH = m3 ? 54 + ch : 0;
+    const blockH = tr + 10 + nameH + ch + thirdH, by = y0 + Math.max(0, (Hc - blockH) / 2);
     drawTrophy(c, 540, by, tr, champ ? 1 : .5);
-    let yy = by + tr + 20; c.textBaseline = 'middle';
+    let yy = by + tr + 10; c.textBaseline = 'middle';
     if (champ) {
-      c.font = fnt(400, 84, F.disp); c.fillStyle = lg(c, 0, yy, 0, yy + 70, [[0, '#fffbe6'], [.5, C.gold], [1, C.gold2]]); spaced(c, 'JUARA', 540, yy + 36, 16, 'center'); yy += 76;
-      const parts = splitName(champ.name); c.fillStyle = '#fff';
-      if (parts.length === 2) { const s = Math.min(fit(c, parts[0], 900, 56, 700, F.cond, 28), fit(c, parts[1], 900, 56, 700, F.cond, 28)); c.font = fnt(700, s, F.cond); c.textAlign = 'center'; c.fillText(parts[0], 540, yy + 28); c.fillText(parts[1], 540, yy + 28 + s * 1.05); }
-      else { const s = fit(c, parts[0], 900, 60, 700, F.cond, 28); c.font = fnt(700, s, F.cond); c.textAlign = 'center'; c.fillText(parts[0], 540, yy + 40); }
-      yy += 130;
+      c.font = fnt(400, 64, F.disp); c.fillStyle = lg(c, 0, yy, 0, yy + 60, [[0, '#fffbe6'], [.5, C.gold], [1, C.gold2]]); spaced(c, 'JUARA', 540, yy + 30, 14, 'center'); yy += 62;
+      const parts = splitName(champ.name); c.fillStyle = '#fff'; c.textAlign = 'center';
+      if (parts.length === 2) { const s = Math.min(fit(c, parts[0], 900, 48, 700, F.cond, 24), fit(c, parts[1], 900, 48, 700, F.cond, 24)); c.font = fnt(700, s, F.cond); c.fillText(parts[0], 540, yy + 22); c.fillText(parts[1], 540, yy + 22 + s * 1.05); }
+      else { const s = fit(c, parts[0], 900, 52, 700, F.cond, 24); c.font = fnt(700, s, F.cond); c.fillText(parts[0], 540, yy + 34); }
+      yy += 88;
     } else {
-      c.font = fnt(700, 22, F.sans); c.fillStyle = 'rgba(242,200,91,.95)'; spaced(c, 'MEMPEREBUTKAN PIALA PDM CUP 2026', 540, yy + 28, 4, 'center'); yy += 60;
+      c.font = fnt(700, 22, F.sans); c.fillStyle = 'rgba(242,200,91,.95)'; spaced(c, 'MEMPEREBUTKAN PIALA PDM CUP 2026', 540, yy + 22, 4, 'center'); yy += 44;
     }
-    drawBCard(c, 100, yy + 24, 880, ch, m);
+    drawBCard(c, 100, yy, 880, ch, m);
+    if (m3) {
+      c.font = fnt(400, 30, F.disp); c.fillStyle = C.gold; c.textAlign = 'center'; c.textBaseline = 'middle'; spaced(c, 'JUARA 3', 540, yy + ch + 30, 6, 'center');
+      drawBCard(c, 100, yy + ch + 54, 880, ch, m3);
+    }
     return;
   }
   const cols = arr.length > 4 ? 2 : 1, rows = Math.ceil(arr.length / cols), cw = cols === 2 ? 480 : 880, gapX = 20, gapY = rows >= 6 ? 9 : 16;
@@ -763,8 +789,8 @@ function buildSpecs() {
       const st = (m.kind === 'done' || anyPlayed(m)) ? 'done' : 'pending';
       const nm = t => splitName(t.name).join(' / ');
       specsM.push({ type: 'match', r, i: m.i, id: 'm' + r + '_' + m.i, n, no: m.no, status: st,
-        label: 'Match ' + pad2(m.no) + ' · ' + RLABEL[n], sub: nm(m.a) + '  vs  ' + nm(m.b),
-        file: 'PDMCup2026_' + slug(RLABEL[n]) + '_Match' + pad2(m.no) + '.png' });
+        label: 'Match ' + pad2(m.no) + ' · ' + (m.isThird ? 'JUARA 3' : RLABEL[n]), sub: nm(m.a) + '  vs  ' + nm(m.b),
+        file: 'PDMCup2026_' + slug(m.isThird ? 'JUARA 3' : RLABEL[n]) + '_Match' + pad2(m.no) + '.png' });
     });
   }
 }
