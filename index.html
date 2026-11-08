@@ -565,11 +565,12 @@ function getTargetPts(r, size) {
 
 function gameValid(a, b, T) {
   if (!Number.isInteger(a) || !Number.isInteger(b) || a < 0 || b < 0 || a === b) return false;
-  const w = Math.max(a, b), l = Math.min(a, b), cap = T + 9;
+  const w = Math.max(a, b), l = Math.min(a, b);
+  const cap = T === 15 ? 21 : (T === 21 ? 30 : T + 9);
   if (w < T || w > cap) return false;
   if (w === T) return l <= T - 2;
   if (w < cap) return l === w - 2;
-  return l === cap - 1;
+  return l === cap - 1 || l === cap - 2;
 }
 
 function evalMatch(g, s, targetPts) {
