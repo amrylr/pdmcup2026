@@ -497,7 +497,7 @@ async function pollServer() {
     try { state = normalize(JSON.parse(raw)); localStorage.setItem(KEY, raw); } catch(e) { return; }
     if (mode === 'tv') {
       renderTV();
-      if (state.tvFocus) focusOn(state.tvFocus, false);
+      if (state.tvFocus && !tourOn) focusOn(state.tvFocus, false);
     } else if (mode === 'admin') {
       if (!/INPUT|TEXTAREA|SELECT/.test((document.activeElement || {}).tagName || '')) renderAdmin();
     }
@@ -1344,7 +1344,14 @@ function renderTV() {
   if (state.tvFocus !== 'full' && state.tvFocus >= B.R) state.tvFocus = 'full';
   renderHeader(B); buildStage(B); buildBar(B); 
   $('#emptyMsg').classList.toggle('is-hidden', B.N > 0);
-  requestAnimationFrame(() => { drawLines(B); applyFocus(false); });
+  requestAnimationFrame(() => { 
+     drawLines(B); 
+     if(tourOn) {
+         startTour(true); 
+     } else {
+         applyFocus(false); 
+     }
+  });
 }
 
 function renderHeader(B) {
@@ -1430,6 +1437,8 @@ function drawLines(B) {
   svg.innerHTML = base.join('') + on.join('');
 }
 
+let tourOn = false, tourTimer = null, tourZones = [], tourIndex = 0;
+
 function applyFocus(animate) {
   if (!curB || !stage.firstChild) return;
   const focus = state.tvFocus;
@@ -1439,23 +1448,36 @@ function applyFocus(animate) {
   const W = stage.offsetWidth, H = stage.offsetHeight;
   let box = { x: 0, y: 0, w: W, h: H }, maxS = 1.25;
   
-  if (focus !== 'full') {
-    const els = $$('.mcard[data-round="' + focus + '"]:not(.void), .champ[data-round="' + focus + '"]', stage);
-    if (els.length) {
-      let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
-      els.forEach(el => { const r = rectIn(el); x0 = Math.min(x0, r.x); y0 = Math.min(y0, r.y); x1 = Math.max(x1, r.x + r.w); y1 = Math.max(y1, r.y + r.h); });
-      const pad = 36; box = { x: x0 - pad, y: y0 - pad, w: x1 - x0 + pad * 2, h: y1 - y0 + pad * 2 }; maxS = 1.7;
+  if (tourOn && tourZones.length > 0) {
+    const tBox = tourZones[tourIndex % tourZones.length];
+    const pad = 60; // Padding ektra agar garis bagan terlihat
+    box = { x: tBox.x - pad, y: tBox.y - pad, w: tBox.w + pad * 2, h: tBox.h + pad * 2 };
+    maxS = 2.5; // Batas zoom diperbesar agar terbaca di TV 32 inch
+    
+    // Hilangkan efek redup di elemen lain saat mode Tour fokus ke ruang/spasial
+    $$('.mcard, .col-title, .champ', stage).forEach(el => el.classList.remove('dim'));
+    $$('#lines path', stage).forEach(p => p.classList.remove('dim'));
+  } else {
+    // Zoom normal berdasarkan tab babak
+    if (focus !== 'full') {
+      const els = $$('.mcard[data-round="' + focus + '"]:not(.void), .champ[data-round="' + focus + '"]', stage);
+      if (els.length) {
+        let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+        els.forEach(el => { const r = rectIn(el); x0 = Math.min(x0, r.x); y0 = Math.min(y0, r.y); x1 = Math.max(x1, r.x + r.w); y1 = Math.max(y1, r.y + r.h); });
+        const pad = 36; box = { x: x0 - pad, y: y0 - pad, w: x1 - x0 + pad * 2, h: y1 - y0 + pad * 2 }; maxS = 1.7;
+      }
     }
+    // Efek redup dipertahankan jika bukan mode Tour
+    $$('.mcard, .col-title, .champ', stage).forEach(el => el.classList.toggle('dim', focus !== 'full' && +el.dataset.round !== focus));
+    $$('#lines path', stage).forEach(p => { const r = +p.dataset.r; p.classList.toggle('dim', focus !== 'full' && !(r === focus || r + 1 === focus)); });
   }
+
   const s = Math.max(0.05, Math.min(aw / box.w, ah / box.h, maxS));
   const tx = padX + (aw - box.w * s) / 2 - box.x * s;
   const ty = padT + (ah - box.h * s) / 2 - box.y * s;
   if (!animate) stage.classList.add('no-anim');
   stage.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + s + ')';
   if (!animate) { void stage.offsetWidth; stage.classList.remove('no-anim'); }
-
-  $$('.mcard, .col-title, .champ', stage).forEach(el => el.classList.toggle('dim', focus !== 'full' && +el.dataset.round !== focus));
-  $$('#lines path', stage).forEach(p => { const r = +p.dataset.r; p.classList.toggle('dim', focus !== 'full' && !(r === focus || r + 1 === focus)); });
 }
 
 function updateBar() { $$('#bar [data-focus]').forEach(b => b.classList.toggle('active', b.dataset.focus === String(state.tvFocus))); }
@@ -1465,9 +1487,8 @@ function focusOn(id, user) {
   if(user !== false && mode === 'tv') save(); 
 }
 
-let tourOn = false, tourTimer = null;
 function buildBar(B) {
-  const btn = id => '<button class="fbtn ' + (String(state.tvFocus) === String(id) ? 'active' : '') + '" data-focus="' + id + '">' + focusLabel(B, id) + '</button>';
+  const btn = id => '<button class="fbtn ' + (String(state.tvFocus) === String(id) && !tourOn ? 'active' : '') + '" data-focus="' + id + '">' + focusLabel(B, id) + '</button>';
   bar.innerHTML = focusIdsFor(B).map(btn).join('') +
     '<span class="sep"></span>' +
     '<button class="fbtn util ' + (tourOn ? 'active' : '') + '" data-act="tour" title="Tour otomatis (T)">' + (tourOn ? '⏸ Tour' : '▶ Tour') + '</button>' +
@@ -1475,15 +1496,61 @@ function buildBar(B) {
     '<button class="fbtn util" data-act="admin" title="Kembali ke Admin">✎ Admin</button>';
 }
 function toggleTour() { tourOn ? stopTour() : startTour(); if (curB) buildBar(curB); }
-function startTour() {
-  tourOn = true; clearInterval(tourTimer);
-  tourTimer = setInterval(() => {
-    if (!curB) return;
-    const ids = focusIdsFor(curB), cur = ids.findIndex(x => String(x) === String(state.tvFocus));
-    focusOn(ids[(cur + 1) % ids.length], false);
-  }, 7000);
+
+function startTour(isRefresh = false) {
+  tourOn = true;
+  
+  const leftCards = $$('.mcard[data-side="L"]:not(.void)', stage);
+  const rightCards = $$('.mcard[data-side="R"]:not(.void)', stage);
+  const centerCards = $$('.mcard[data-side="C"]:not(.void)', stage);
+  
+  let allLeft = [...leftCards];
+  let allRight = [...rightCards, ...centerCards]; 
+  
+  // Urutkan Kiri: Dari Atas ke Bawah
+  allLeft.sort((a,b) => rectIn(a).y - rectIn(b).y);
+  // Urutkan Kanan: Dari Bawah ke Atas
+  allRight.sort((a,b) => rectIn(b).y - rectIn(a).y);
+  
+  tourZones = [];
+  const makeZone = (els) => {
+      if(!els.length) return null;
+      let x0=1e9, y0=1e9, x1=-1e9, y1=-1e9;
+      els.forEach(el => {
+          const r = rectIn(el);
+          x0 = Math.min(x0, r.x); y0 = Math.min(y0, r.y);
+          x1 = Math.max(x1, r.x + r.w); y1 = Math.max(y1, r.y + r.h);
+      });
+      return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+  };
+  
+  // Kelompokkan per 4 bagan
+  for (let i = 0; i < allLeft.length; i += 4) tourZones.push(makeZone(allLeft.slice(i, i + 4)));
+  for (let i = 0; i < allRight.length; i += 4) tourZones.push(makeZone(allRight.slice(i, i + 4)));
+  
+  if(tourZones.length === 0) tourZones.push({x:0, y:0, w: stage.offsetWidth, h: stage.offsetHeight});
+  
+  if (isRefresh !== true) {
+      tourIndex = 0;
+      clearInterval(tourTimer);
+      tourTimer = setInterval(() => {
+        tourIndex++;
+        applyFocus(true);
+      }, 6000); // Ganti tampilan kelompok bagan setiap 6 detik
+  }
+  
+  applyFocus(isRefresh !== true);
+  if (isRefresh !== true && curB) buildBar(curB);
 }
-function stopTour() { if (!tourOn) return; tourOn = false; clearInterval(tourTimer); if (curB && mode === 'tv') buildBar(curB); }
+
+function stopTour() { 
+  if (!tourOn) return; 
+  tourOn = false; 
+  clearInterval(tourTimer); 
+  applyFocus(true); 
+  if (curB && mode === 'tv') buildBar(curB); 
+}
+
 function toggleFs() { if (document.fullscreenElement) document.exitFullscreen(); else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); }
 
 let idleT;
